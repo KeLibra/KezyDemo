@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ll_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.kezy.test.MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hello World!"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ProgressBar
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="30dp"
+            android:id="@+id/host_action_download_progressbar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="72dp"
+            android:layout_height="26dp"
+            android:max="100"
+            android:progress="10"
+            android:progressDrawable="@drawable/host_bg_down_load_progress" />
+
+
+        <ImageView
+            android:id="@+id/iv_test"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="40dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/header1" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="30dp"
+            android:gravity="center">
+
+            <com.kezy.test.weight.AutoVagueBgImageView
+                android:id="@+id/iv_iamge"
+                android:layout_width="990px"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:scaleType="fitCenter" />
+
+            <com.kezy.test.weight.AutoVagueBgImageView
+                android:id="@+id/iv_iamge_1"
+                android:layout_width="990px"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:scaleType="fitCenter" />
+
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="底部"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:textSize="24sp"
+            android:background="#fe2245"
+            android:gravity="center"
+            />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

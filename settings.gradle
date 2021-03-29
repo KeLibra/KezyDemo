@@ -1,0 +1,18 @@
+include ':app'
+include ':test'
+include ':installUnkownApp'
+include ':floatViewDemo'
+
+include ':download_app', ':download_lib'
+
+include ':app_download_app', ':app_download_lib'
+
+
+rootProject.name = "KezyDemo"
+
+project(':download_app').projectDir = (new File('downloadDemo/download_app'))
+project(':download_lib').projectDir = (new File('downloadDemo/downloader_lib'))
+
+
+project(':app_download_app').projectDir = (new File('appDownloadDemo/app'))
+project(':app_download_lib').projectDir = (new File('appDownloadDemo/library'))

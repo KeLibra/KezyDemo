@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/host_nac_layout"
+    android:layout_width="wrap_content"
+    android:layout_height="220dp"
+    android:orientation="vertical"
+    tools:ignore="ResourceName">
+
+    <ImageView
+        android:id="@+id/game_float_bottom_redpackage"
+        android:layout_width="73dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/game_iv_float_tip_bottom_red" />
+
+    <ImageView
+        android:id="@+id/game_float_bottom_pen"
+        android:layout_width="73dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/game_float_bottom_redpackage"
+        android:src="@drawable/game_iv_float_tip_bottom_n" />
+
+    <LinearLayout
+        android:layout_marginBottom="-5dp"
+        android:id="@+id/game_float_activity_layout"
+        android:layout_width="62dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/game_float_bottom_pen"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/game_iv_float_tip_bg"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <ImageView
+            android:id="@+id/game_activity_1"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:src="@drawable/game_iv_float_tip_zhuanpan" />
+
+        <ImageView
+            android:id="@+id/game_activity_2"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:src="@drawable/game_iv_float_tip_wufu" />
+
+        <ImageView
+            android:id="@+id/game_activity_3"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:src="@drawable/game_iv_float_tip_egg" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>
