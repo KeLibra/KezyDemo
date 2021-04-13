@@ -28,6 +28,7 @@ public class DateTransUtils {
         res = simpleDateFormat.format(date);
         return res;
     }
+
     public static String stampToDate(long stamp){
         String res;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
