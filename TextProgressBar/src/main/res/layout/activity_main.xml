@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <com.kezy.customprogressbar.CustomProgressBar
+        android:id="@+id/icon_text_progressbar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="330dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="80dp" />
+
+    <Button
+        android:id="@+id/btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="28dp"
+        android:text="添加桌面快捷方式" />
+
+</LinearLayout>

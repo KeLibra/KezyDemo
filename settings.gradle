@@ -2,6 +2,7 @@ include ':app'
 include ':test'
 include ':installUnkownApp'
 include ':floatViewDemo'
+include ':TextProgressBar'
 
 include ':download_app', ':download_lib'
 

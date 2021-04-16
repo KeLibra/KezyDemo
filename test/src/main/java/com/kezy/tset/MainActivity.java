@@ -9,6 +9,7 @@ import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -42,6 +43,24 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        Intent intent = getIntent();
+        if (intent != null) {
+            //获取整个uri的链接
+            String dataString = intent.getDataString();
+            //获取相应Uri中的一些内容！
+
+            Uri data = intent.getData();
+            if (data != null) {
+                String scheme = data.getScheme();
+                String authority = data.getAuthority();
+                String host = data.getHost();
+                String port = String.valueOf(data.getPort());
+                String path = data.getPath();
+                String query = data.getQuery();
+            }
+            Log.e("---------msg", " -------- dataString " + dataString);
+        }
 
         btn = findViewById(R.id.btn_click);
         btn2 = findViewById(R.id.btn_click2);
