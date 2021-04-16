@@ -19,9 +19,8 @@ import androidx.core.content.ContextCompat;
 import java.text.DecimalFormat;
 
 /**
- * 说明：可以显示图标和文字的ProgressBar
- * 作者：liuwan
- * 添加时间：2017/3/20 15:49
+ * 可以显示图标和文字的ProgressBar,
+ *   文字随着进度变色
  */
 public class CustomProgressBar extends ProgressBar {
 
@@ -32,14 +31,19 @@ public class CustomProgressBar extends ProgressBar {
     private int mState;
 
     // IconTextProgressBar的状态
-    private static final int STATE_DEFAULT = 101;
-    private static final int STATE_DOWNLOADING = 102;
-    private static final int STATE_PAUSE = 103;
-    private static final int STATE_DOWNLOAD_FINISH = 104;
+    private static final int STATE_DEFAULT = 101; // 默认状态
+    private static final int STATE_DOWNLOADING = 102; // 下载中
+    private static final int STATE_PAUSE = 103; // 暂停
+    private static final int STATE_DOWNLOAD_FINISH = 104; // 下载完成
     // IconTextProgressBar的文字大小(sp)
     private static final float TEXT_SIZE_SP = 17f;
     // IconTextProgressBar的图标与文字间距(dp)
     private static final float ICON_TEXT_SPACING_DP = 5f;
+
+    private static final int textDefaultColor = Color.WHITE;
+    private static final int textProgressColor = Color.parseColor("#FD5041");
+
+    private  boolean isShowIcon = false;
 
     public CustomProgressBar(Context context) {
         super(context, null, android.R.attr.progressBarStyleHorizontal);
@@ -118,25 +122,25 @@ public class CustomProgressBar extends ProgressBar {
         switch (state) {
             case STATE_DEFAULT:
                 setProgress(100);
-                mPaint.setColor(Color.WHITE);
+                mPaint.setColor(textDefaultColor);
                 break;
 
             case STATE_DOWNLOADING:
-                mPaint.setColor(ContextCompat.getColor(mContext, R.color.pb_blue));
+                mPaint.setColor(textProgressColor);
                 break;
 
             case STATE_PAUSE:
-                mPaint.setColor(ContextCompat.getColor(mContext, R.color.pb_blue));
+                mPaint.setColor(textProgressColor);
                 break;
 
             case STATE_DOWNLOAD_FINISH:
                 setProgress(100);
-                mPaint.setColor(Color.WHITE);
+                mPaint.setColor(textDefaultColor);
                 break;
 
             default:
                 setProgress(100);
-                mPaint.setColor(Color.WHITE);
+                mPaint.setColor(textDefaultColor);
                 break;
         }
     }
@@ -154,27 +158,38 @@ public class CustomProgressBar extends ProgressBar {
             float textY = (getHeight() / 2) - textRect.centerY();
             canvas.drawText(text, textX, textY, mPaint);
         } else {
-            // 绘制图标和文字
-            Bitmap icon = getIcon(state);
+
+            int iconWith = 0;
+            Bitmap icon = null;
+            float iconY = 0;
+            float iconX = 0;
+            if (isShowIcon) {
+                // 绘制图标和文字
+
+                icon = getIcon(state);
+                iconX = (getWidth() / 2) - icon.getWidth() - getOffsetX(icon.getWidth(), textRect.centerX(), ICON_TEXT_SPACING_DP, false);
+                iconY = (getHeight() / 2) - icon.getHeight() / 2;
+                canvas.drawBitmap(icon, iconX, iconY, mPaint);
+                iconWith = icon.getWidth();
+            }
+
 
             float textX = (getWidth() / 2) -
-                    getOffsetX(icon.getWidth(), textRect.centerX(), ICON_TEXT_SPACING_DP, true);
+                    getOffsetX(iconWith, textRect.centerX(), ICON_TEXT_SPACING_DP, true);
             float textY = (getHeight() / 2) - textRect.centerY();
             canvas.drawText(text, textX, textY, mPaint);
-            float iconX = (getWidth() / 2) - icon.getWidth() -
-                    getOffsetX(icon.getWidth(), textRect.centerX(), ICON_TEXT_SPACING_DP, false);
-            float iconY = (getHeight() / 2) - icon.getHeight() / 2;
-            canvas.drawBitmap(icon, iconX, iconY, mPaint);
 
             if (state == STATE_DEFAULT) return;
 
             Bitmap bufferBitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
             Canvas bufferCanvas = new Canvas(bufferBitmap);
-            bufferCanvas.drawBitmap(icon, iconX, iconY, mPaint);
+            if (isShowIcon && icon != null) {
+                bufferCanvas.drawBitmap(icon, iconX, iconY, mPaint);
+            }
             bufferCanvas.drawText(text, textX, textY, mPaint);
             // 设置混合模式
             mPaint.setXfermode(mPorterDuffXfermode);
-            mPaint.setColor(Color.WHITE);
+            mPaint.setColor(textDefaultColor);
             RectF rectF = new RectF(0, 0, getWidth() * mProgress / 100, getHeight());
             // 绘制源图形
             bufferCanvas.drawRect(rectF, mPaint);
@@ -183,7 +198,7 @@ public class CustomProgressBar extends ProgressBar {
             // 清除混合模式
             mPaint.setXfermode(null);
 
-            if (!icon.isRecycled()) {
+            if (isShowIcon && !icon.isRecycled()) {
                 icon.isRecycled();
             }
             if (!bufferBitmap.isRecycled()) {
