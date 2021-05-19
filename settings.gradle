@@ -17,3 +17,4 @@ project(':download_lib').projectDir = (new File('downloadDemo/downloader_lib'))
 
 project(':app_download_app').projectDir = (new File('appDownloadDemo/app'))
 project(':app_download_lib').projectDir = (new File('appDownloadDemo/library'))
+include ':downloadaa'
