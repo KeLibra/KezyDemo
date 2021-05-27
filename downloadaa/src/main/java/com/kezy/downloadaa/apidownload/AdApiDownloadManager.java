@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -131,6 +132,7 @@ public class AdApiDownloadManager {
                 AdApiDownloadHandler downloadHandler = new AdApiDownloadHandler(context, this);
                 downloadObserver = new AdApiDownloadObserver(downloadHandler, downloadManager, lastDownloadId);
                 context.getContentResolver().registerContentObserver(Uri.parse("content://downloads/my_downloads"), true, downloadObserver);
+                Toast.makeText(context,"apk 开始下载", Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -289,7 +291,11 @@ public class AdApiDownloadManager {
      * 显示下载失败
      */
     public void showFail() {
+        if (mDownloadListener != null) {
+            mDownloadListener.downloadErr();
+        }
     }
+
 
     public void startDownload() {
 
@@ -297,5 +303,22 @@ public class AdApiDownloadManager {
 
     public void pauseDownload(){
 
+    }
+
+    public void successDownload() {
+        if (mDownloadListener != null) {
+            mDownloadListener.downloadSuccess(getDownloadFile().toString());
+        }
+    }
+
+    private DownloadListener mDownloadListener;
+
+    public void setmDownloadListener(DownloadListener mDownloadListener) {
+        this.mDownloadListener = mDownloadListener;
+    }
+
+    public interface DownloadListener{
+        void downloadSuccess(String path);
+        void downloadErr();
     }
 }

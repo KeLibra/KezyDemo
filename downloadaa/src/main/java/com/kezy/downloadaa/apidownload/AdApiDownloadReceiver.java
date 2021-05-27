@@ -28,7 +28,7 @@ public class AdApiDownloadReceiver extends BroadcastReceiver {
                 // 下载完成
                 long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                 // 自动安装app
-                installApp(context, downloadId);
+//                installApp(context, downloadId);
             } else if (intent.getAction().equals(DownloadManager.ACTION_NOTIFICATION_CLICKED)) {
                 // 未下载完成，点击跳转系统的下载管理界面
 //                Intent viewDownloadIntent = new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS);

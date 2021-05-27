@@ -6,14 +6,55 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <EditText
+        android:id="@+id/et_apk_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginRight="16dp"
+        android:hint="apk下载链接"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <Button
         android:id="@+id/btn_download"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginRight="16dp"
+        android:text="点击下载"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/et_apk_url" />
+
+    <TextView
+        android:id="@+id/tv_app_name_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="点击下载"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginTop="32dp"
+        android:text="app包名:  "
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="@id/btn_download"
+        app:layout_constraintTop_toBottomOf="@+id/btn_download" />
+
+    <TextView
+        android:id="@+id/tv_app_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:textSize="16sp"
+        app:layout_constraintLeft_toRightOf="@+id/tv_app_name_desc"
+        app:layout_constraintTop_toBottomOf="@+id/btn_download" />
+
+    <Button
+        android:id="@+id/btn_copy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="复制包名"
+        app:layout_constraintLeft_toLeftOf="@+id/tv_app_name_desc"
+        app:layout_constraintTop_toBottomOf="@+id/tv_app_name_desc" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

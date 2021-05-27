@@ -56,7 +56,8 @@ public class AdApiDownloadHandler extends Handler {
                     wrfUpdateManager.get().unregisterContentObserver(context);
                 }
                 if (wrfUpdateManager.get() != null) {
-                    wrfUpdateManager.get().installApp(context, wrfUpdateManager.get().getDownloadFile());
+//                    wrfUpdateManager.get().installApp(context, wrfUpdateManager.get().getDownloadFile());
+                    wrfUpdateManager.get().successDownload();
                 }
                 break;
             case DownloadManager.STATUS_FAILED:
