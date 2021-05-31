@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -19,6 +20,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -41,6 +44,9 @@ public class AdApiDownloadManager {
      * 下载监听
      */
     private AdApiDownloadObserver downloadObserver;
+
+    private Map<String, String> urlIdMap = new HashMap<>();
+    private Map<String, DownloadManager.Request> IdRequestMap = new HashMap<>();
 
     private AdApiDownloadManager() {
     }
@@ -68,6 +74,16 @@ public class AdApiDownloadManager {
      */
     @SuppressLint("MissingPermission")
     public void downLoadApk(Context context, String downloadUrl,String savePath, String appName) {
+
+        if (urlIdMap.get(downloadUrl) != null) {
+            Toast.makeText(context, "应用正在下载,ID = " + urlIdMap.get(downloadUrl), Toast.LENGTH_LONG).show();
+            DownloadManager.Request request = IdRequestMap.get(urlIdMap.get(downloadUrl));
+            if (downloadManager != null) {
+                downloadManager.enqueue(request);
+            }
+            return;
+        }
+
         try {
             if (context != null) {
                 if (!downLoadMangerIsEnable(context)) {
@@ -128,6 +144,10 @@ public class AdApiDownloadManager {
                 request.setMimeType("application/vnd.android.package-archive");
                 // 开启下载，返回下载id
                 lastDownloadId = downloadManager.enqueue(request);
+                urlIdMap.put(downloadUrl, lastDownloadId+"");
+                IdRequestMap.put(lastDownloadId+"", request);
+                Log.e("------msg", " ---- url 111  map = " + urlIdMap.toString());
+                saveLocalData(context);
                 // 如需要进度及下载状态，增加下载监听
                 AdApiDownloadHandler downloadHandler = new AdApiDownloadHandler(context, this);
                 downloadObserver = new AdApiDownloadObserver(downloadHandler, downloadManager, lastDownloadId);
@@ -138,6 +158,20 @@ public class AdApiDownloadManager {
             e.printStackTrace();
             // 防止有些厂商更改了系统的downloadManager
         }
+    }
+
+    private void saveLocalData(Context context) {
+        SharedPreferences sharedPreferences= context.getSharedPreferences("data",Context.MODE_PRIVATE);
+        //步骤2： 实例化SharedPreferences.Editor对象
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        //步骤3：将获取过来的值放入文件
+        editor.putString("urlIdMap", urlIdMap.toString());
+        Log.e("------msg", " ---- url map = " + urlIdMap.toString());
+        editor.putString("IdRequestMap", IdRequestMap.toString());
+        Log.e("------msg", " ---- id  map = " + IdRequestMap.toString());
+        //步骤4：提交
+        editor.commit();
+
     }
 
     /**

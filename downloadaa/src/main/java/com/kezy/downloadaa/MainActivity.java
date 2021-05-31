@@ -85,14 +85,14 @@ public class MainActivity extends AppCompatActivity {
                     tvAppName.setTextColor(R.color.black);
                     tvAppName.setText(packageInfo.applicationInfo.packageName);
                 } else {
-                    tvAppName.setTextColor(Color.parseColor("#fs5353"));
+                    tvAppName.setTextColor(Color.parseColor("#fd5353"));
                     tvAppName.setText("包名解析异常");
                 }
             }
 
             @Override
             public void downloadErr() {
-                tvAppName.setTextColor(Color.parseColor("#fs5353"));
+                tvAppName.setTextColor(Color.parseColor("#fd5353"));
                 tvAppName.setText("下载异常");
             }
         });

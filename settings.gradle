@@ -4,17 +4,25 @@ include ':installUnkownApp'
 include ':floatViewDemo'
 include ':TextProgressBar'
 
-include ':download_app', ':download_lib'
 
-include ':app_download_app', ':app_download_lib'
+
+include ':downloadaa'
 
 
 rootProject.name = "KezyDemo"
 
+
+include ':download_app', ':download_lib'
 project(':download_app').projectDir = (new File('downloadDemo/download_app'))
 project(':download_lib').projectDir = (new File('downloadDemo/downloader_lib'))
 
 
+include ':app_download_app', ':app_download_lib'
 project(':app_download_app').projectDir = (new File('appDownloadDemo/app'))
 project(':app_download_lib').projectDir = (new File('appDownloadDemo/library'))
-include ':downloadaa'
+
+
+
+include ':downloadSdkApp', ':downloadSdkLib'
+project(':downloadSdkApp').projectDir = (new File('downloadDemoSdk/downloadSdkApp'))
+project(':downloadSdkLib').projectDir = (new File('downloadDemoSdk/downloadSdkLib'))
