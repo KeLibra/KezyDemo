@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btn, btn2;
     private TextView txt;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -6,8 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.StatFs;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -26,8 +28,10 @@ import com.kezy.test.fastblur.Blur;
 import com.kezy.test.weight.AdBottomBannerView;
 import com.kezy.test.weight.AutoVagueBgImageView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout ll_layout;
 
     private TextView tv_bottom;
+
+    String path = "/storage/emulated/0/Android/data/com.ximalaya.ting.android/cache/download_apk/奇迹小说.apk";
 
     private AutoVagueBgImageView bgImageView;
 
@@ -158,7 +164,11 @@ public class MainActivity extends AppCompatActivity {
        tv_bottom.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View v) {
-               startActivity(new Intent(MainActivity.this, MainActivity3.class));
+//               startActivity(new Intent(MainActivity.this, MainActivity3.class));
+//             boolean delete =  deleteApkFile(new File(path));
+//               Log.v("-------msg", " ---delete : = " + delete);
+
+               getSDCardAvailSize();
            }
        });
 
@@ -172,6 +182,93 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    private long getSDCardAvailSize() {
+        String state = Environment.getExternalStorageState();
+        long aaa=0;
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            File sdcardDir = Environment.getExternalStorageDirectory();
+            StatFs sf = new StatFs(sdcardDir.getPath());
+            long blockSize = sf.getBlockSize();
+            long blockCount = sf.getBlockCount();
+            long availCount = sf.getAvailableBlocks();
+            long totalSeize = blockSize * blockCount;
+            aaa = availCount * blockSize;
+            Log.e("-----msg -- size", "block大小:" + blockSize + ",block数目:" + blockCount + ",总大小:" + blockSize * blockCount);
+            Log.e("-----msg -- size", "totalSeize:" + totalSeize );
+            Log.e("-----msg -- size", "可用的block数目：:" + availCount + ",剩余空间:" + availCount * blockSize );
+
+            queryStorage();
+        }
+        return aaa;
+    }
+
+
+
+
+    public void queryStorage(){
+        StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getPath());
+
+        //存储块总数量
+        long blockCount = statFs.getBlockCount();
+        //块大小
+        long blockSize = statFs.getBlockSize();
+        //可用块数量
+        long availableCount = statFs.getAvailableBlocks();
+        //剩余块数量，注：这个包含保留块（including reserved blocks）即应用无法使用的空间
+        long freeBlocks = statFs.getFreeBlocks();
+        //这两个方法是直接输出总内存和可用空间，也有getFreeBytes
+        //API level 18（JELLY_BEAN_MR2）引入
+        long totalSize = statFs.getTotalBytes();
+        long availableSize = statFs.getAvailableBytes();
+
+        Log.d("statfs","total = " + getUnit(totalSize));
+        Log.d("statfs","availableSize = " + getUnit(availableSize));
+
+        //这里可以看出 available 是小于 free ,free 包括保留块。
+        Log.d("statfs","total = " + getUnit(blockSize * blockCount));
+        Log.d("statfs","available = " + getUnit(blockSize * availableCount));
+        Log.d("statfs","free = " + getUnit(blockSize * freeBlocks));
+    }
+
+    private String[] units = {"B", "KB", "MB", "GB", "TB"};
+
+    /**
+     * 单位转换
+     */
+    private String getUnit(float size) {
+        int index = 0;
+        while (size > 1024 && index < 4) {
+            size = size / 1024;
+            index++;
+        }
+        return String.format(Locale.getDefault(), " %.2f %s", size, units[index]);
+    }
+    /**
+     * 下载前清空本地缓存的文件
+     */
+    private boolean deleteApkFile(File destFileDir) {
+        try {
+            if (!destFileDir.exists()) {
+                return false;
+            }
+            if (destFileDir.isDirectory()) {
+                File[] files = destFileDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        deleteApkFile(f);
+                    }
+                }
+            }
+            Log.v("-------msg", " return  ---delete : = ");
+           return destFileDir.delete();
+        }catch (Exception e) {
+            e.printStackTrace();
+            Log.v("-------msg", " exception   ---delete : = ");
+        }
+        Log.v("-------msg", " exception   ---delete : = ");
+        return false;
+    }
 
     WindowManager mWindowManager;
     WindowManager.LayoutParams mwParams;

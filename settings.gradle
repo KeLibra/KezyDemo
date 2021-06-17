@@ -26,3 +26,4 @@ project(':app_download_lib').projectDir = (new File('appDownloadDemo/library'))
 include ':downloadSdkApp', ':downloadSdkLib'
 project(':downloadSdkApp').projectDir = (new File('downloadDemoSdk/downloadSdkApp'))
 project(':downloadSdkLib').projectDir = (new File('downloadDemoSdk/downloadSdkLib'))
+include ':notifytest'
