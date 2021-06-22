@@ -31,10 +31,8 @@ public class DownloadService extends Service {
 
     public static final String DOWNLOAD_APK_PATH = "download_apk";
 
-
     public static final String DOWNLOAD_APK_URL = "download_apk_url";
     public static final String DOWNLOAD_APK_NAME = "download_apk_name";
-
 
     // 通知栏点击行动
     private static final String ACTION = "actionName";

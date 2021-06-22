@@ -8,8 +8,7 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.sdkdownloadlibs.downloader.api.AdApiDownloadManager;
-import com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadServiceManage;
-import com.kezy.sdkdownloadlibs.task.TaskImpl;
+import com.kezy.sdkdownloadlibs.task.DownloadTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,17 +22,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        TaskImpl manager = new AdApiDownloadManager();
+//        TaskImpl manager = new AdApiDownloadManager();
+//
+//        DownloadServiceManage v2 = new DownloadServiceManage(MainActivity.this);
 
-        DownloadServiceManage v2 = new DownloadServiceManage(MainActivity.this);
+
+        DownloadTask info = new DownloadTask();
+        info.url = url_35MB;
+        info.taskManager = new AdApiDownloadManager();
 
         btnApi = findViewById(R.id.btn_api);
         btnApi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                manager.startDownload(MainActivity.this, url_35MB);
+//                manager.startDownload(MainActivity.this, url_35MB);
 //                v2.downLoadAPK(url_35MB);
+
+                info.taskManager.startDownload(MainActivity.this, info.url);
             }
         });
 
@@ -43,10 +49,10 @@ public class MainActivity extends AppCompatActivity {
         btnXima.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.v("--------msg", " ------- status 111 = " + manager.getStatus(MainActivity.this, url_35MB));
+//                Log.v("--------msg", " ------- status 111 = " + manager.getStatus(MainActivity.this, url_35MB));
 
-                v2.pauseDownload(MainActivity.this, url_35MB);
-                Log.v("--------msg", " ------- status 333 = " + v2.getStatus(MainActivity.this, url_35MB));
+//                v2.pauseDownload(MainActivity.this, url_35MB);
+                Log.v("--------msg", " ------- status 333 = " + info.taskManager.getStatus(MainActivity.this, url_35MB));
             }
         });
     }

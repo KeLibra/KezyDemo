@@ -9,7 +9,7 @@ import java.io.File;
  * @Time 2021/6/22
  * @Description
  */
-public class DownloadTask {
+public class DownloadTask<T extends TaskImpl> {
 
     public long timeId; // time戳
     public long taskId; // 任务id
@@ -33,6 +33,8 @@ public class DownloadTask {
 
     public long totalSize; // apk总大小
     public long tempSize; // apk 已下载大小
+
+    public T taskManager;
 
     public String getFilePath() {
         return new StringBuilder()
@@ -60,4 +62,5 @@ public class DownloadTask {
         }
         return false;
     }
+
 }
