@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-//                manager.startDownload(MainActivity.this, url_35MB);
-                v2.downLoadAPK(url_35MB);
+                manager.startDownload(MainActivity.this, url_35MB);
+//                v2.downLoadAPK(url_35MB);
             }
         });
 

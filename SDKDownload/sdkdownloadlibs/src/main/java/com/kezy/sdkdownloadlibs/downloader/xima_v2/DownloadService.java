@@ -116,7 +116,7 @@ public class DownloadService extends Service {
 
 
     public void startDownload(String url) {
-        DownloadTask task = getDownloadTrackByUrl(url);
+        DownloadTask task = getDownloadTaskByUrl(url);
         if (task == null) {
             return;
         }
@@ -132,7 +132,7 @@ public class DownloadService extends Service {
     }
 
     public void pauseDownload(String url) {
-        DownloadTask task = getDownloadTrackByUrl(url);
+        DownloadTask task = getDownloadTaskByUrl(url);
         if (task != null && task.isRunning) {
             task.isRunning = false;
             task.status = TaskImpl.Status.STOPPED;
@@ -140,7 +140,7 @@ public class DownloadService extends Service {
     }
 
     public void removeDownload(String url) {
-        DownloadTask task = getDownloadTrackByUrl(url);
+        DownloadTask task = getDownloadTaskByUrl(url);
         if (task != null) {
             task.status = TaskImpl.Status.DELETE;
             task.isRunning = false;
@@ -178,7 +178,7 @@ public class DownloadService extends Service {
     }
 
     public boolean isDowning(String url) {
-        DownloadTask downloadTask = getDownloadTrackByUrl(url);
+        DownloadTask downloadTask = getDownloadTaskByUrl(url);
         if (downloadTask != null) {
             if (downloadTask.status == TaskImpl.Status.DOWNLOADING) {
                 return true;
@@ -188,7 +188,7 @@ public class DownloadService extends Service {
         return false;
     }
 
-    public DownloadTask getDownloadTrackByUrl(String url) {
+    public DownloadTask getDownloadTaskByUrl(String url) {
         if (mDownloadTaskList == null || TextUtils.isEmpty(url)) {
             return null;
         }
@@ -216,7 +216,7 @@ public class DownloadService extends Service {
     }
 
     public int getStatueByUrl(String url) {
-       DownloadTask downloadTask = getDownloadTrackByUrl(url);
+       DownloadTask downloadTask = getDownloadTaskByUrl(url);
         if (downloadTask != null) {
             return downloadTask.status;
         }
@@ -225,7 +225,7 @@ public class DownloadService extends Service {
 
     @Nullable
     public String getDownloadSavePath(String url) {
-        DownloadTask downloadTask = getDownloadTrackByUrl(url);
+        DownloadTask downloadTask = getDownloadTaskByUrl(url);
         if (downloadTask != null) {
             return downloadTask.getFilePath() + ".apk";
         }
@@ -284,9 +284,7 @@ public class DownloadService extends Service {
                 case HANDLER_SHOW_RETRY_NOTIF:
                     Log.e("----------msg", " ------- HANDLER_SHOW_RETRY_NOTIF ----   ");
                     break;
-
                 default:
-                    // stopService(updateIntent);
                     break;
             }
         }

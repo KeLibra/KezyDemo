@@ -21,11 +21,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 
+import com.kezy.sdkdownloadlibs.task.DownloadTask;
 import com.kezy.sdkdownloadlibs.task.TaskImpl;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -45,9 +46,10 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
      */
     private AdApiDownloadObserver downloadObserver;
 
-    private Map<String, Long> urlIdMap = new HashMap<>();
-
-    private int mDownloadStatus = Status.WAITING;
+    /**
+     * @Fields mDownloadTaskList : 正在下载的任务
+     */
+    private List<DownloadTask> mDownloadTaskList = new ArrayList<>();
 
     @Override
     public int getDownloadType() {
@@ -57,12 +59,18 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
     @Override
     public Long createDownloadKey(Context context, String downloadUrl) {
 
-        return urlIdMap.get(downloadUrl);
+        if (getTaskByUrl(downloadUrl) != null) {
+            return getTaskByUrl(downloadUrl).taskId;
+        }
+       return -1L;
     }
 
     @Override
     public long getTaskId(String downloadUrl) {
-        return getDownloadIdByUrl(downloadUrl);
+        if (getTaskByUrl(downloadUrl) != null) {
+            return getTaskByUrl(downloadUrl).taskId;
+        }
+        return -1L;
     }
 
     @Override
@@ -81,9 +89,9 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
     @Override
     public void deleteDownload(Context context, String downloadUrl) {
         try {
-            if (getDownloadIdByUrl(downloadUrl) != -1) {
-              downloadManager.remove(getDownloadIdByUrl(downloadUrl));
-              mDownloadStatus = Status.DELETE;
+            if (getTaskByUrl(downloadUrl) != null) {
+              downloadManager.remove(getTaskByUrl(downloadUrl).taskId);
+                getTaskByUrl(downloadUrl).status = Status.DELETE;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,13 +100,12 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
 
     @Override
     public int getStatus(Context context, String downloadUrl) {
-        return mDownloadStatus;
-    }
+        if (getTaskByUrl(downloadUrl) != null) {
+            return getTaskByUrl(downloadUrl).status;
+        }
+        return Status.WAITING;
 
-    private static class HolderClass {
-        private static AdApiDownloadManager instance = new AdApiDownloadManager();
     }
-
 
     /**
      * 下载apky
@@ -109,7 +116,8 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
         try {
             if (context != null) {
                 if (!downLoadMangerIsEnable(context)) {
-                    downFromBrowser(context, downloadUrl);
+                    Log.e("-------msg", " ----- 下载器不可用！");
+                    Toast.makeText(context, "下载器不可用！", Toast.LENGTH_LONG).show();
                     return;
                 }
                 // 获取下载管理器
@@ -122,20 +130,23 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
                 if (TextUtils.isEmpty(appName)) {
-                    appName = "apk应用";
+                    appName = "应用";
+                } else {
+                    if (!appName.contains(".apk")) {
+                        appName = appName + ".apk";
+                    }
                 }
 
                 if (TextUtils.isEmpty(savePath)) {
                     //使用系统默认的下载路径 此处为应用内 /android/data/packages ,所以兼容7.0
                     Log.v("--------msg", "下载路径 ----- " + (context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS + File.separator + context.getPackageName() + ".apk")));
                     //设置下载的路径
-                    File file = new File(getDiskCachePath(context) + "/download_apk/", appName+".apk");
+                    File file = new File(getDiskCachePath(context) + "/download_apk/", appName);
                     request.setDestinationUri(Uri.fromFile(file));
                     deleteApkFile(file);
                 } else {
-
                     //设置下载的路径
-                    File file = new File(getDiskCachePath(context) + "/"+ savePath +"/", appName+".apk");
+                    File file = new File(getDiskCachePath(context) + "/"+ savePath +"/", appName);
                     request.setDestinationUri(Uri.fromFile(file));
 
                     deleteApkFile(Objects.requireNonNull(file));
@@ -160,8 +171,11 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
                 request.setMimeType("application/vnd.android.package-archive");
                 // 开启下载，返回下载id
                 long lastDownloadId = downloadManager.enqueue(request);
-                urlIdMap.put(downloadUrl, lastDownloadId);
-                Log.e("------msg", " ---- url 111  map = " + urlIdMap.toString());
+                DownloadTask task = createTask(downloadUrl, lastDownloadId, appName);
+                if (task != null) {
+                    mDownloadTaskList.add(task);
+                }
+                Log.e("------msg", " ---- url 111  map 222 = " + mDownloadTaskList.toString());
                 // 如需要进度及下载状态，增加下载监听
                 AdApiDownloadHandler downloadHandler = new AdApiDownloadHandler();
                 downloadObserver = new AdApiDownloadObserver(downloadHandler, downloadManager, lastDownloadId);
@@ -172,6 +186,21 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
             e.printStackTrace();
             // 防止有些厂商更改了系统的downloadManager
         }
+    }
+
+    private DownloadTask createTask(String downloadUrl, long lastDownloadId, String appName) {
+
+        // 如果 已有task， 则更新taskID。 若无task， 则创建
+        if (getTaskByUrl(downloadUrl) != null) {
+            getTaskByUrl(downloadUrl).taskId = lastDownloadId;
+        } else {
+            DownloadTask task = new DownloadTask();
+            task.taskId = lastDownloadId;
+            task.url = downloadUrl;
+            task.name = appName;
+            return task;
+        }
+        return null;
     }
 
     /**
@@ -197,8 +226,8 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
      */
     public void clearCurrentTask(String url) {
         try {
-            if (getDownloadIdByUrl(url) != -1) {
-                downloadManager.remove(getDownloadIdByUrl(url));
+            if (getTaskByUrl(url) != null) {
+                downloadManager.remove(getTaskId(url));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -219,19 +248,6 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
                 || state == PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED);
     }
 
-    public void downFromBrowser(Context context, String downloadUrl) {
-        // 从浏览器下载
-        try {
-            Intent intent = new Intent();
-            Uri uri = Uri.parse(downloadUrl);
-            intent.setAction(Intent.ACTION_VIEW);
-            intent.setData(uri);
-            context.startActivity(intent);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.d("", "无法通过浏览器下载！");
-        }
-    }
 
     /**
      * 取消下载的监听
@@ -280,7 +296,7 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
      */
     @Override
     public String getDownloadFile(Context context, String downloadUrl) {
-        long downloadId = getDownloadIdByUrl(downloadUrl);
+        long downloadId = getTaskId(downloadUrl);
         if (downloadId <= 0) {
             return "";
         }
@@ -335,48 +351,57 @@ public class AdApiDownloadManager implements TaskImpl<Long> {
 
     public class AdApiDownloadHandler extends Handler {
 
-        public AdApiDownloadHandler() {
-        }
-
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
-            switch (msg.what) {
-                case DownloadManager.STATUS_PAUSED:
-                    mDownloadStatus = Status.STOPPED;
-                    Log.e("------msg", " ------- 暂停");
-                    break;
-                case DownloadManager.STATUS_PENDING:
-                    mDownloadStatus = Status.STARTED;
-                    // 开始
-                    Log.e("------msg", " ------- 开始下载");
-                    break;
-                case DownloadManager.STATUS_RUNNING:
+            DownloadTask task = (DownloadTask) msg.obj;
 
-                    // 下载中
-                    mDownloadStatus = Status.DOWNLOADING;
-                    Log.e("------msg", " ------- 下载中");
-                    break;
-                case DownloadManager.STATUS_SUCCESSFUL:
-                    mDownloadStatus = Status.FINISHED;
-                    Log.e("------msg", " ------- 下载成功");
-                    break;
-                case DownloadManager.STATUS_FAILED:
-                    // 下载失败，清除本次的下载任务
-                    mDownloadStatus = Status.ERROR;
-                    Log.e("------msg", " ------- 下载失败");
-                    break;
-                default:
-                    break;
+            Log.e("--------msg", " -------- 下载 状态 --- "  + task);
+            if (task == null) {
+                return;
+            }
+            if (getTaskById(task.taskId) != null) {
+                getTaskById(task.taskId).status = task.status;
+                getTaskById(task.taskId).isRunning = task.isRunning;
+                getTaskById(task.taskId).progress = task.progress;
+                getTaskById(task.taskId).totalSize = task.totalSize;
+                getTaskById(task.taskId).tempSize = task.tempSize;
+                if (getDownloadFile(null, task.url)!= null && TextUtils.isEmpty(task.path)) {
+                    getTaskById(task.taskId).path = getDownloadFile(null, task.url);
+                }
+            } else {
+                if (getDownloadFile(null, task.url)!= null && TextUtils.isEmpty(task.path)) {
+                    task.path = getDownloadFile(null, task.url);
+                }
+                mDownloadTaskList.add(task);
             }
         }
     }
 
-    private long getDownloadIdByUrl(String downloadUrl) {
-        if (urlIdMap != null && urlIdMap.get(downloadUrl)!= null) {
-            return urlIdMap.get(downloadUrl).longValue();
+
+    public DownloadTask getTaskByUrl(String url) {
+        if (mDownloadTaskList == null || TextUtils.isEmpty(url)) {
+            return null;
         }
-        return -1;
+        for (int i = 0; i < mDownloadTaskList.size(); i++) {
+            if (url.equals(mDownloadTaskList.get(i).url)) {
+                return mDownloadTaskList.get(i);
+            }
+        }
+        return null;
+    }
+
+    private DownloadTask getTaskById(long downloadId) {
+        if (mDownloadTaskList == null || downloadId < 0) {
+            return null;
+        }
+
+        for (DownloadTask task : mDownloadTaskList) {
+            if (task != null && downloadId == task.taskId) {
+                return task;
+            }
+        }
+        return null;
     }
 }

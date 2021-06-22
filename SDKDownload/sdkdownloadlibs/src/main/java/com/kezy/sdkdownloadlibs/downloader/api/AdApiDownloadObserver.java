@@ -7,6 +7,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.kezy.sdkdownloadlibs.task.DownloadTask;
+import com.kezy.sdkdownloadlibs.task.TaskImpl;
+
 /**
  * @Author Kezy
  * @Time 2021/5/18
@@ -14,7 +17,7 @@ import android.util.Log;
  */
 public class AdApiDownloadObserver extends ContentObserver {
 
-    private final String TAG = getClass().getCanonicalName();
+    private final String TAG = "-------msg" + getClass().getCanonicalName();
 
     private final Handler handler;
 
@@ -27,6 +30,8 @@ public class AdApiDownloadObserver extends ContentObserver {
 
     private final DownloadManager.Query query;
 
+    private long mDownloadId;
+
     /**
      * Creates a content observer.
      *
@@ -36,6 +41,7 @@ public class AdApiDownloadObserver extends ContentObserver {
         super(handler);
         this.handler = handler;
         this.downloadManager = downloadManager;
+        this.mDownloadId = downloadId;
         query = new DownloadManager.Query().setFilterById(downloadId);
     }
 
@@ -62,37 +68,53 @@ public class AdApiDownloadObserver extends ContentObserver {
                 } else {
                     mProgress = 0;
                 }
+                Message message = Message.obtain();
+                DownloadTask task = new DownloadTask();
+                // 下载暂停
+
+                task.taskId = mDownloadId;
+                task.progress = mProgress;
+                task.totalSize = totalSize;
+                task.tempSize = currentSize;
+
+
                 Log.d(TAG, String.valueOf(mProgress));
                 switch (status) {
                     case DownloadManager.STATUS_PAUSED:
-                        // 下载暂停
-                        handler.sendEmptyMessage(DownloadManager.STATUS_PAUSED);
+                        task.isRunning = false;
+                        task.status = TaskImpl.Status.STOPPED;
+                        message.obj = task;
                         Log.d(TAG, "STATUS_PAUSED");
                         break;
                     case DownloadManager.STATUS_PENDING:
                         // 开始下载
-                        handler.sendEmptyMessage(DownloadManager.STATUS_PENDING);
+                        task.isRunning = true;
+                        task.status = TaskImpl.Status.STARTED;
+                        message.obj = task;
                         Log.d(TAG, "STATUS_PENDING");
                         break;
                     case DownloadManager.STATUS_RUNNING:
-                        // 正在下载，不做任何事情
-                        Message message = Message.obtain();
-                        message.what = DownloadManager.STATUS_RUNNING;
-                        message.arg1 = mProgress;
-                        handler.sendMessage(message);
+                        task.isRunning = true;
+                        task.status = TaskImpl.Status.DOWNLOADING;
+                        message.obj = task;
+
                         Log.d(TAG, "STATUS_RUNNING");
                         break;
                     case DownloadManager.STATUS_SUCCESSFUL:
                         if (!isEnd) {
                             // 完成
-                            handler.sendEmptyMessage(DownloadManager.STATUS_SUCCESSFUL);
+                            task.isRunning = false;
+                            task.status = TaskImpl.Status.FINISHED;
+                            message.obj = task;
                             Log.d(TAG, "STATUS_SUCCESSFUL");
                         }
                         isEnd = true;
                         break;
                     case DownloadManager.STATUS_FAILED:
                         if (!isEnd) {
-                            handler.sendEmptyMessage(DownloadManager.STATUS_FAILED);
+                            task.isRunning = false;
+                            task.status = TaskImpl.Status.ERROR;
+                            message.obj = task;
                             Log.d(TAG, "STATUS_FAILED");
                         }
                         isEnd = true;
@@ -100,6 +122,7 @@ public class AdApiDownloadObserver extends ContentObserver {
                     default:
                         break;
                 }
+                handler.sendMessage(message);
             }
         } catch (Exception e) {
             e.printStackTrace();
