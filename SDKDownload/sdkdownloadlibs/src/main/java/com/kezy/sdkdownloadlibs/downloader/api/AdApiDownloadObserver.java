@@ -7,8 +7,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.kezy.sdkdownloadlibs.task.DownloadTask;
-import com.kezy.sdkdownloadlibs.task.TaskImpl;
+import com.kezy.sdkdownloadlibs.task.DownloadInfo;
+import com.kezy.sdkdownloadlibs.task.EngineImpl;
 
 /**
  * @Author Kezy
@@ -69,7 +69,7 @@ public class AdApiDownloadObserver extends ContentObserver {
                     mProgress = 0;
                 }
                 Message message = Message.obtain();
-                DownloadTask task = new DownloadTask();
+                DownloadInfo task = new DownloadInfo("");
                 // 下载暂停
 
                 task.taskId = mDownloadId;
@@ -82,20 +82,20 @@ public class AdApiDownloadObserver extends ContentObserver {
                 switch (status) {
                     case DownloadManager.STATUS_PAUSED:
                         task.isRunning = false;
-                        task.status = TaskImpl.Status.STOPPED;
+                        task.status = EngineImpl.Status.STOPPED;
                         message.obj = task;
                         Log.d(TAG, "STATUS_PAUSED");
                         break;
                     case DownloadManager.STATUS_PENDING:
                         // 开始下载
                         task.isRunning = true;
-                        task.status = TaskImpl.Status.STARTED;
+                        task.status = EngineImpl.Status.STARTED;
                         message.obj = task;
                         Log.d(TAG, "STATUS_PENDING");
                         break;
                     case DownloadManager.STATUS_RUNNING:
                         task.isRunning = true;
-                        task.status = TaskImpl.Status.DOWNLOADING;
+                        task.status = EngineImpl.Status.DOWNLOADING;
                         message.obj = task;
 
                         Log.d(TAG, "STATUS_RUNNING");
@@ -104,7 +104,7 @@ public class AdApiDownloadObserver extends ContentObserver {
                         if (!isEnd) {
                             // 完成
                             task.isRunning = false;
-                            task.status = TaskImpl.Status.FINISHED;
+                            task.status = EngineImpl.Status.FINISHED;
                             message.obj = task;
                             Log.d(TAG, "STATUS_SUCCESSFUL");
                         }
@@ -113,7 +113,7 @@ public class AdApiDownloadObserver extends ContentObserver {
                     case DownloadManager.STATUS_FAILED:
                         if (!isEnd) {
                             task.isRunning = false;
-                            task.status = TaskImpl.Status.ERROR;
+                            task.status = EngineImpl.Status.ERROR;
                             message.obj = task;
                             Log.d(TAG, "STATUS_FAILED");
                         }

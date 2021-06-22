@@ -6,10 +6,12 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.kezy.sdkdownloadlibs.task.TaskImpl;
+import com.kezy.sdkdownloadlibs.task.DownloadInfo;
+import com.kezy.sdkdownloadlibs.task.EngineImpl;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -17,32 +19,42 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.DOWNLOAD_APK_NAME;
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.DOWNLOAD_APK_URL;
+import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadServiceV2.DOWNLOAD_APK_NAME;
+import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadServiceV2.DOWNLOAD_APK_URL;
 
 /**
- * @author le.xin
  */
-public class DownloadServiceManage implements TaskImpl<String> {
+public class DownloadServiceManageV2 implements EngineImpl<String> {
 
     private boolean mConnected = false;
-    private Context mContext;
 
-    public DownloadServiceManage(Context context) {
+    private Context mContext;
+    public DownloadServiceManageV2(Context context) {
+        mContext = context.getApplicationContext();
         init(context);
     }
 
     @Nullable
-    private DownloadService mDownloadService;
+    private DownloadServiceV2 mDownloadService;
+
+    private DownloadInfo mInfo;
+
 
     @Override
-    public int getDownloadType() {
-        return DownloadType.TYPE_XIMA;
+    public void bindDownloadInfo(DownloadInfo info) {
+
+        Log.e("----------", " -------- bindDownloadInfo " + mDownloadService);
+        if (mDownloadService != null) {
+        mDownloadService.setDownloadInfo(info);
+        } else {
+            mInfo = info;
+        }
     }
 
     @Override
-    public String createDownloadKey(Context context, String downloadUrl) {
-        return downloadUrl;
+    public DownloadInfo getInfo(String url) {
+        Log.i("-------msg", " v2 manager info " + mDownloadService.getDownloadInfo(url));
+        return mDownloadService.getDownloadInfo(url);
     }
 
     @Override
@@ -57,7 +69,7 @@ public class DownloadServiceManage implements TaskImpl<String> {
 
     @Override
     public void pauseDownload(Context context, String downloadUrl) {
-        if (!checkConnectionStatus()) {
+        if (!checkConnectionStatus(context)) {
             return;
         }
         if (mDownloadService != null) {
@@ -68,7 +80,7 @@ public class DownloadServiceManage implements TaskImpl<String> {
     @Override
     public void continueDownload(Context context, String downloadUrl) {
 
-        if (!checkConnectionStatus()) {
+        if (!checkConnectionStatus(context)) {
             downLoadAPK(downloadUrl);
             return;
         }
@@ -79,7 +91,7 @@ public class DownloadServiceManage implements TaskImpl<String> {
 
     @Override
     public void deleteDownload(Context context, String downloadUrl) {
-        if (!checkConnectionStatus()) {
+        if (!checkConnectionStatus(context)) {
             return;
         }
         if (mDownloadService != null) {
@@ -101,19 +113,10 @@ public class DownloadServiceManage implements TaskImpl<String> {
         if (context == null) {
             return;
         }
-
-        this.mContext = context.getApplicationContext();
-        mContext.bindService(new Intent(mContext, DownloadService.class), mConn, Context.BIND_AUTO_CREATE);
+        Log.e("----------", " -------- init ");
+        context.bindService(new Intent(context, DownloadServiceV2.class), mConn, Context.BIND_AUTO_CREATE);
     }
 
-    public void bindDownloadServiceService(Context context) {
-        if (context == null) {
-            return;
-        }
-
-        context.bindService(new Intent(context, DownloadService.class),
-                mConn, Context.BIND_AUTO_CREATE);
-    }
 
     public void unBindDownloadService(Context context) {
         try {
@@ -134,17 +137,18 @@ public class DownloadServiceManage implements TaskImpl<String> {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            if (service instanceof DownloadService.Binder) {
+            Log.e("----------", " -------- onServiceConnected ");
+            if (service instanceof DownloadServiceV2.Binder) {
                 mConnected = true;
-                mDownloadService = ((DownloadService.Binder) service).getService();
-                onServiceConnectedCallBack();
+                mDownloadService = ((DownloadServiceV2.Binder) service).getService();
+                mDownloadService.setDownloadInfo(mInfo);
             }
         }
     };
 
-    private boolean checkConnectionStatus() {
+    private boolean checkConnectionStatus(Context context) {
         if (!mConnected || mDownloadService == null) {
-            init(mContext);
+            init(context);
             return false;
         }
         return true;
@@ -154,9 +158,6 @@ public class DownloadServiceManage implements TaskImpl<String> {
     private void onServiceConnectedCallBack() {
     }
     public int getStatueByUrl(String url) {
-        if (!checkConnectionStatus()) {
-            return Status.WAITING;
-        }
 
         if (mDownloadService != null) {
             return mDownloadService.getStatueByUrl(url);
@@ -167,9 +168,6 @@ public class DownloadServiceManage implements TaskImpl<String> {
 
     @Nullable
     public String getDownloadSavePath(String url) {
-        if (!checkConnectionStatus()) {
-            return null;
-        }
 
         if (mDownloadService != null) {
             return mDownloadService.getDownloadSavePath(url);
@@ -179,9 +177,6 @@ public class DownloadServiceManage implements TaskImpl<String> {
     }
 
     public boolean isDowning(String url) {
-        if (!checkConnectionStatus()) {
-            return false;
-        }
 
         if (mDownloadService != null) {
             return mDownloadService.isDowning(url);
@@ -246,7 +241,7 @@ public class DownloadServiceManage implements TaskImpl<String> {
             init(mContext);
         }
 
-        Intent intent = new Intent(mContext, DownloadService.class);
+        Intent intent = new Intent(mContext, DownloadServiceV2.class);
         intent.putExtra(DOWNLOAD_APK_URL, downloadUrl);
         if (!TextUtils.isEmpty(fileName)) {
             intent.putExtra(DOWNLOAD_APK_NAME, fileName);

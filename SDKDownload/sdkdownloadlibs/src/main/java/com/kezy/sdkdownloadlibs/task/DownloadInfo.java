@@ -9,7 +9,7 @@ import java.io.File;
  * @Time 2021/6/22
  * @Description
  */
-public class DownloadTask<T extends TaskImpl> {
+public class DownloadInfo {
 
     public long timeId; // time戳
     public long taskId; // 任务id
@@ -23,7 +23,7 @@ public class DownloadTask<T extends TaskImpl> {
 
     public int progress; // 进度
 
-    public int status = TaskImpl.Status.WAITING;
+    public int status = EngineImpl.Status.WAITING;
 
     public double speed; // 速度
 
@@ -34,7 +34,12 @@ public class DownloadTask<T extends TaskImpl> {
     public long totalSize; // apk总大小
     public long tempSize; // apk 已下载大小
 
-    public T taskManager;
+    public int downloadType; // 下载器类型
+
+
+    public DownloadInfo(String url) {
+        this.url = url;
+    }
 
     public String getFilePath() {
         return new StringBuilder()
@@ -55,12 +60,30 @@ public class DownloadTask<T extends TaskImpl> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj != null && obj instanceof DownloadTask) {
-            DownloadTask other = (DownloadTask) obj;
+        if (obj != null && obj instanceof DownloadInfo) {
+            DownloadInfo other = (DownloadInfo) obj;
             // adid 相同 并且 下载url 相同，则认为是同一个task
                 return TextUtils.equals(this.url, other.url) && this.adId == other.adId;
         }
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "DownloadInfo{" +
+                "taskId=" + taskId +
+                ", adId=" + adId +
+                ", url='" + url + '\'' +
+                ", name='" + name + '\'' +
+                ", desc='" + desc + '\'' +
+                ", icon='" + icon + '\'' +
+                ", path='" + path + '\'' +
+                ", progress=" + progress +
+                ", status=" + status +
+                ", isRunning=" + isRunning +
+                ", totalSize=" + totalSize +
+                ", tempSize=" + tempSize +
+                ", downloadType=" + downloadType +
+                '}';
+    }
 }

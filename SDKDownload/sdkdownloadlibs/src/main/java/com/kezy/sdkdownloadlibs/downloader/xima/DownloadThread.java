@@ -1,4 +1,4 @@
-package com.kezy.sdkdownloadlibs.downloader.xima_v2;
+package com.kezy.sdkdownloadlibs.downloader.xima;
 
 import android.content.Context;
 import android.os.Environment;
@@ -10,8 +10,8 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
-import com.kezy.sdkdownloadlibs.task.DownloadTask;
-import com.kezy.sdkdownloadlibs.task.TaskImpl;
+import com.kezy.sdkdownloadlibs.task.DownloadInfo;
+import com.kezy.sdkdownloadlibs.task.EngineImpl;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -24,12 +24,12 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLDecoder;
 
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.DOWNLOAD_ING;
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.DOWN_ERROR;
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.DOWN_OK;
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.HANDLER_PAUSE;
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.HANDLER_REMOVE;
-import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.REQUEST_TIME_OUT;
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_ING;
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWN_ERROR;
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWN_OK;
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.HANDLER_PAUSE;
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.HANDLER_REMOVE;
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.REQUEST_TIME_OUT;
 
 
 /**
@@ -39,12 +39,12 @@ import static com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadService.REQUES
  */
 public class DownloadThread extends Thread{
 
-    private DownloadTask mTask;
+    private DownloadInfo mTask;
     private final WeakReference<DownloadService.UpdateHandler> weakHandler;
     private final WeakReference<Context> weakContext;
 
 
-    public DownloadThread(Context context, DownloadTask task, DownloadService.UpdateHandler handler) {
+    public DownloadThread(Context context, DownloadInfo task, DownloadService.UpdateHandler handler) {
         this.mTask = task;
         weakHandler = new WeakReference<>(handler);;
         weakContext = new WeakReference<>(context);;
@@ -67,11 +67,11 @@ public class DownloadThread extends Thread{
 
             if (downloadSize == Integer.MAX_VALUE) {
                 message = Message.obtain();
-                if (mTask.status == TaskImpl.Status.DELETE) {
+                if (mTask.status == EngineImpl.Status.DELETE) {
                     message.what = HANDLER_REMOVE;
                 } else {
                     message.what = HANDLER_PAUSE;
-                    mTask.status = TaskImpl.Status.STOPPED;
+                    mTask.status = EngineImpl.Status.STOPPED;
                 }
                 message.obj = mTask;
 
@@ -79,11 +79,11 @@ public class DownloadThread extends Thread{
                 // 下载成功
                 message = Message.obtain();
                 message.what = DOWN_OK;
-                mTask.status = TaskImpl.Status.FINISHED;
+                mTask.status = EngineImpl.Status.FINISHED;
                 message.obj = mTask;
                 Log.e("----------msg", " ------- 下载完成 ---- downloadSize " + downloadSize);
             } else {
-                mTask.status = TaskImpl.Status.ERROR;
+                mTask.status = EngineImpl.Status.ERROR;
                 message = Message.obtain();
                 message.what = DOWN_ERROR;
                 message.obj = mTask;
@@ -92,12 +92,12 @@ public class DownloadThread extends Thread{
         } catch (SocketTimeoutException e) {
             message = Message.obtain();
             message.what =  REQUEST_TIME_OUT;
-            mTask.status = TaskImpl.Status.ERROR;
+            mTask.status = EngineImpl.Status.ERROR;
             message.obj = mTask;
         } catch (IOException e) {
             message = Message.obtain();
             message.what = DOWN_ERROR;
-            mTask.status = TaskImpl.Status.ERROR;
+            mTask.status = EngineImpl.Status.ERROR;
             message.obj = mTask;
         } finally {
             Log.d("-----msg mydownload", mTask.retryCount + " --- :finally -- " + (message == null ? "null" : message.what));
@@ -111,7 +111,7 @@ public class DownloadThread extends Thread{
      *
      * @throws IOException
      */
-    public long downloadUpdateFile(Handler handler,final DownloadTask task) throws IOException {
+    public long downloadUpdateFile(Handler handler,final DownloadInfo task) throws IOException {
 
         double downloadSpeed;
         long speedTemp = task.tempSize;
@@ -126,7 +126,7 @@ public class DownloadThread extends Thread{
             return Integer.MAX_VALUE;
         }
 
-        task.status = TaskImpl.Status.DOWNLOADING;
+        task.status = EngineImpl.Status.DOWNLOADING;
 
         boolean isRestart = task.tempSize != 0;
         if (task.retryCount == 0) {
@@ -134,7 +134,7 @@ public class DownloadThread extends Thread{
             if (handler != null) {
                Message message = Message.obtain();
                message.what = DOWNLOAD_ING;
-               task.status = TaskImpl.Status.STARTED;
+               task.status = EngineImpl.Status.STARTED;
                message.obj = task;
                handler.sendMessage(message);
             }
@@ -275,11 +275,11 @@ public class DownloadThread extends Thread{
                         mUpDateTimerMillis = System.currentTimeMillis();
                     }
                     // TODO: 2021/6/22  progress changed
-                    Log.v("-------msg", " ------ progress = " + updateCount);
+//                    Log.v("-------msg", " ------ progress = " + updateCount);
                     if (handler != null) {
                         Message message = Message.obtain();
                         message.what = DOWNLOAD_ING;
-                        task.status = TaskImpl.Status.DOWNLOADING;
+                        task.status = EngineImpl.Status.DOWNLOADING;
                         message.obj = task;
                         handler.sendMessage(message);
                     }
@@ -289,7 +289,7 @@ public class DownloadThread extends Thread{
             }
 
             if (!task.isRunning) {
-                if (task.status != TaskImpl.Status.DELETE) {
+                if (task.status != EngineImpl.Status.DELETE) {
                     task.status = 0;
                 }
                 return Integer.MAX_VALUE;
@@ -367,7 +367,7 @@ public class DownloadThread extends Thread{
         }
     }
 
-    private File getTempDownloadPath(DownloadTask task) {
+    private File getTempDownloadPath(DownloadInfo task) {
         if (task != null) {
             return new File(task.path, task.name + ".temp");
         }

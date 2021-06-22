@@ -1,4 +1,4 @@
-package com.kezy.sdkdownloadlibs.downloader.xima_v2;
+package com.kezy.sdkdownloadlibs.downloader.xima;
 
 import android.app.Service;
 import android.content.Intent;
@@ -11,8 +11,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.kezy.sdkdownloadlibs.task.DownloadTask;
-import com.kezy.sdkdownloadlibs.task.TaskImpl;
+import com.kezy.sdkdownloadlibs.task.DownloadInfo;
+import com.kezy.sdkdownloadlibs.task.EngineImpl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public class DownloadService extends Service {
     /**
      * @Fields mDownloadTaskList : 正在下载的任务
      */
-    private List<DownloadTask> mDownloadTaskList = new ArrayList<>();
+    private List<DownloadInfo> mDownloadTaskList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -84,20 +84,20 @@ public class DownloadService extends Service {
             return super.onStartCommand(intent, flags, startId);
         }
 
-        DownloadTask task = getDownloadTask(intent);
+        DownloadInfo task = getDownloadTask(intent);
         if (task != null) {
-            for (DownloadTask dt : mDownloadTaskList) {
+            for (DownloadInfo dt : mDownloadTaskList) {
                 if (task.equals(dt)) {
                     if (isDowning(dt.url)) {
                         // 如果是重新下载，触发一下 下载开始回调
                         handleStart(dt.url, true);
                     }
-                    if (dt.status == TaskImpl.Status.ERROR) {
+                    if (dt.status == EngineImpl.Status.ERROR) {
                         DownloadThread thread = new DownloadThread(getApplicationContext(), dt, mHandler);
                         dt.retryCount = 0;
                         thread.start();
                     }
-                    if (dt.status == TaskImpl.Status.STOPPED) {
+                    if (dt.status == EngineImpl.Status.STOPPED) {
                         startDownload(dt.url);
                     }
                     return super.onStartCommand(intent, flags, startId);
@@ -114,14 +114,14 @@ public class DownloadService extends Service {
 
 
     public void startDownload(String url) {
-        DownloadTask task = getDownloadTaskByUrl(url);
+        DownloadInfo task = getDownloadTaskByUrl(url);
         if (task == null) {
             return;
         }
         task.isRunning = true;
         Log.e("-------msg" , "startDownload  --- task.isRunning = " + task.isRunning);
-        if (task.status != TaskImpl.Status.DOWNLOADING) {
-            task.status = TaskImpl.Status.DOWNLOADING;
+        if (task.status != EngineImpl.Status.DOWNLOADING) {
+            task.status = EngineImpl.Status.DOWNLOADING;
             DownloadThread thread = new DownloadThread(getApplicationContext(), task, mHandler);
             task.retryCount = 0;
             task.isRunning = true;
@@ -130,17 +130,17 @@ public class DownloadService extends Service {
     }
 
     public void pauseDownload(String url) {
-        DownloadTask task = getDownloadTaskByUrl(url);
+        DownloadInfo task = getDownloadTaskByUrl(url);
         if (task != null && task.isRunning) {
             task.isRunning = false;
-            task.status = TaskImpl.Status.STOPPED;
+            task.status = EngineImpl.Status.STOPPED;
         }
     }
 
     public void removeDownload(String url) {
-        DownloadTask task = getDownloadTaskByUrl(url);
+        DownloadInfo task = getDownloadTaskByUrl(url);
         if (task != null) {
-            task.status = TaskImpl.Status.DELETE;
+            task.status = EngineImpl.Status.DELETE;
             task.isRunning = false;
             String filePath = task.getFilePath();
             if (filePath != null && new File(filePath).exists()) {
@@ -153,15 +153,15 @@ public class DownloadService extends Service {
         }
     }
 
-    private DownloadTask getDownloadTask(Intent intent) {
-        DownloadTask task = null;
+    private DownloadInfo getDownloadTask(Intent intent) {
+        DownloadInfo task = null;
         if (null != intent) {
             String mFileName = intent.getStringExtra(DOWNLOAD_APK_NAME);
             String mDownloadUrl = intent.getStringExtra(DOWNLOAD_APK_URL);
             long spfileSize = 0;
             long spTemp = 0;
             if (!TextUtils.isEmpty(mDownloadUrl)) {
-                task = new DownloadTask();
+                task = new DownloadInfo(mDownloadUrl);
                 task.timeId = System.currentTimeMillis();
                 task.url = mDownloadUrl;
                 task.name = mFileName;
@@ -176,9 +176,9 @@ public class DownloadService extends Service {
     }
 
     public boolean isDowning(String url) {
-        DownloadTask downloadTask = getDownloadTaskByUrl(url);
+        DownloadInfo downloadTask = getDownloadTaskByUrl(url);
         if (downloadTask != null) {
-            if (downloadTask.status == TaskImpl.Status.DOWNLOADING) {
+            if (downloadTask.status == EngineImpl.Status.DOWNLOADING) {
                 return true;
             }
         }
@@ -186,7 +186,7 @@ public class DownloadService extends Service {
         return false;
     }
 
-    public DownloadTask getDownloadTaskByUrl(String url) {
+    public DownloadInfo getDownloadTaskByUrl(String url) {
         if (mDownloadTaskList == null || TextUtils.isEmpty(url)) {
             return null;
         }
@@ -206,7 +206,7 @@ public class DownloadService extends Service {
         Log.d(TAG, "handleStart   " + url);
     }
 
-    private File getTempDownloadPath(DownloadTask task) {
+    private File getTempDownloadPath(DownloadInfo task) {
         if (task != null) {
             return new File(task.path, task.name + ".temp");
         }
@@ -214,16 +214,16 @@ public class DownloadService extends Service {
     }
 
     public int getStatueByUrl(String url) {
-       DownloadTask downloadTask = getDownloadTaskByUrl(url);
+       DownloadInfo downloadTask = getDownloadTaskByUrl(url);
         if (downloadTask != null) {
             return downloadTask.status;
         }
-        return TaskImpl.Status.WAITING;
+        return EngineImpl.Status.WAITING;
     }
 
     @Nullable
     public String getDownloadSavePath(String url) {
-        DownloadTask downloadTask = getDownloadTaskByUrl(url);
+        DownloadInfo downloadTask = getDownloadTaskByUrl(url);
         if (downloadTask != null) {
             return downloadTask.getFilePath() + ".apk";
         }
@@ -243,14 +243,15 @@ public class DownloadService extends Service {
     public class UpdateHandler extends Handler {
         @Override
         public void handleMessage(@NonNull Message msg) {
-            Log.e("----------msg", " ------- 下载过程  msg msg msg ---- msg   " + msg);
-            DownloadTask task = (DownloadTask) msg.obj;
+//            Log.e("----------msg", " ------- 下载过程  msg msg msg ---- msg   " + msg);
+            DownloadInfo task = (DownloadInfo) msg.obj;
             if (task == null) {
                 return;
             }
 
             switch (msg.what) {
                 case DOWN_OK:
+                    Log.i("-------------msg", " -------下载完成 task URL : " + task.url);
                     // 下载完成，点击安装
                     File file = new File(task.getFilePath() + ".apk");
                     String fileName = file.getName().toUpperCase();
@@ -265,7 +266,7 @@ public class DownloadService extends Service {
                     Log.e("----------msg", " ------- err ----   ");
                     break;
                 case DOWNLOAD_ING:
-                    Log.e("----------msg", " ------- ing ----   " + task.progress);
+//                    Log.e("----------msg", " ------- ing ----   " + task.progress);
                     break;
                 case REQUEST_TIME_OUT:
                     Log.e("----------msg", " ------- REQUEST_TIME_OUT ----   ");

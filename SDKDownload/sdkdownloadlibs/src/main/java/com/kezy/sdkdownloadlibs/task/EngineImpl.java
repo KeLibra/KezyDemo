@@ -7,7 +7,7 @@ import android.content.Context;
  * @Time 2021/6/21
  * @Description task 接口
  */
-public interface TaskImpl<T> {
+public interface EngineImpl<T> {
 
     class Status {
         public static int WAITING = 0;     //等待, 没有下载
@@ -25,11 +25,9 @@ public interface TaskImpl<T> {
 
     }
 
-    // 下载器类型
-    int getDownloadType();
+    void bindDownloadInfo(DownloadInfo info);
 
-    // 下载的key
-    T createDownloadKey(Context context, String downloadUrl);
+    DownloadInfo getInfo(String url);
 
     // 下载任务id
     long getTaskId(String downloadUrl);
