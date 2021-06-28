@@ -33,6 +33,6 @@
 
 
         <service android:name=".downloader.xima.DownloadService" />
-        <service android:name=".downloader.xima_v2.DownloadServiceV2" />
+        <service android:name=".downloader.xima.DownloadService" />
     </application>
 </manifest>

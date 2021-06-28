@@ -46,6 +46,26 @@ public class DownloadService extends Service {
      */
     private List<DownloadInfo> mDownloadTaskList = new ArrayList<>();
 
+    public DownloadInfo getDownloadInfo(String url) {
+
+       return getInfoByUrl(url);
+    }
+
+    public void setDownloadInfo(DownloadInfo info) {
+       if (mDownloadTaskList.contains(info)) {
+           mDownloadTaskList.add(info);
+       }
+    }
+
+    private DownloadInfo getInfoByUrl(String url) {
+        for (DownloadInfo task : mDownloadTaskList) {
+            if (TextUtils.equals(url, task.url)) {
+                return task;
+            }
+        }
+        return null;
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -84,10 +104,10 @@ public class DownloadService extends Service {
             return super.onStartCommand(intent, flags, startId);
         }
 
-        DownloadInfo task = getDownloadTask(intent);
-        if (task != null) {
+        DownloadInfo info =  initDownloadTask(intent);
+        if (info != null) {
             for (DownloadInfo dt : mDownloadTaskList) {
-                if (task.equals(dt)) {
+                if (info.equals(dt)) {
                     if (isDowning(dt.url)) {
                         // 如果是重新下载，触发一下 下载开始回调
                         handleStart(dt.url, true);
@@ -103,9 +123,11 @@ public class DownloadService extends Service {
                     return super.onStartCommand(intent, flags, startId);
                 }
             }
-            mDownloadTaskList.add(task);
-            DownloadThread thread = new DownloadThread(getApplicationContext(), task, mHandler);
-            task.retryCount = 0;
+            if (!mDownloadTaskList.contains(info)) {
+                mDownloadTaskList.add(info);
+            }
+            DownloadThread thread = new DownloadThread(getApplicationContext(), info, mHandler);
+            info.retryCount = 0;
             thread.start();
         }
 
@@ -114,88 +136,72 @@ public class DownloadService extends Service {
 
 
     public void startDownload(String url) {
-        DownloadInfo task = getDownloadTaskByUrl(url);
-        if (task == null) {
+        if (getInfoByUrl(url) == null) {
             return;
         }
-        task.isRunning = true;
-        Log.e("-------msg" , "startDownload  --- task.isRunning = " + task.isRunning);
-        if (task.status != EngineImpl.Status.DOWNLOADING) {
-            task.status = EngineImpl.Status.DOWNLOADING;
-            DownloadThread thread = new DownloadThread(getApplicationContext(), task, mHandler);
-            task.retryCount = 0;
-            task.isRunning = true;
+        getInfoByUrl(url).isRunning = true;
+        Log.e("-------msg", "startDownload  --- task.isRunning = " + getInfoByUrl(url).isRunning);
+        if (getInfoByUrl(url).status != EngineImpl.Status.DOWNLOADING) {
+            getInfoByUrl(url).status = EngineImpl.Status.DOWNLOADING;
+            DownloadThread thread = new DownloadThread(getApplicationContext(), getInfoByUrl(url), mHandler);
+            getInfoByUrl(url).retryCount = 0;
+            getInfoByUrl(url).isRunning = true;
             thread.start();
         }
     }
 
     public void pauseDownload(String url) {
-        DownloadInfo task = getDownloadTaskByUrl(url);
-        if (task != null && task.isRunning) {
-            task.isRunning = false;
-            task.status = EngineImpl.Status.STOPPED;
+        if (getInfoByUrl(url) != null && getInfoByUrl(url).isRunning) {
+            getInfoByUrl(url).isRunning = false;
+            getInfoByUrl(url).status = EngineImpl.Status.STOPPED;
         }
     }
 
     public void removeDownload(String url) {
-        DownloadInfo task = getDownloadTaskByUrl(url);
-        if (task != null) {
-            task.status = EngineImpl.Status.DELETE;
-            task.isRunning = false;
-            String filePath = task.getFilePath();
+        if (getInfoByUrl(url) != null) {
+            getInfoByUrl(url).status = EngineImpl.Status.DELETE;
+            getInfoByUrl(url).isRunning = false;
+            String filePath = getInfoByUrl(url).getFilePath();
             if (filePath != null && new File(filePath).exists()) {
                 new File(filePath).delete();
             }
-            File tempDownloadPath = getTempDownloadPath(task);
+            File tempDownloadPath = getTempDownloadPath(getInfoByUrl(url));
             if (tempDownloadPath != null && tempDownloadPath.exists()) {
                 tempDownloadPath.delete();
             }
         }
     }
 
-    private DownloadInfo getDownloadTask(Intent intent) {
-        DownloadInfo task = null;
+    private DownloadInfo initDownloadTask(Intent intent) {
         if (null != intent) {
             String mFileName = intent.getStringExtra(DOWNLOAD_APK_NAME);
             String mDownloadUrl = intent.getStringExtra(DOWNLOAD_APK_URL);
             long spfileSize = 0;
             long spTemp = 0;
             if (!TextUtils.isEmpty(mDownloadUrl)) {
-                task = new DownloadInfo(mDownloadUrl);
-                task.timeId = System.currentTimeMillis();
-                task.url = mDownloadUrl;
-                task.name = mFileName;
+                DownloadInfo info = new DownloadInfo(mDownloadUrl);
+                info.timeId = System.currentTimeMillis();
+                info.url = mDownloadUrl;
+                info.name = mFileName;
                 if (spfileSize > 0 && spTemp > 0) {
-                    task.totalSize = spfileSize;
-                    task.tempSize = spTemp;
-                    task.progress = (int) ((spTemp * 100) / spfileSize);
+                    info.totalSize = spfileSize;
+                    info.tempSize = spTemp;
+                    info.progress = (int) ((spTemp * 100) / spfileSize);
                 }
+                return info;
             }
         }
-        return task;
+        return null;
     }
 
     public boolean isDowning(String url) {
-        DownloadInfo downloadTask = getDownloadTaskByUrl(url);
-        if (downloadTask != null) {
-            if (downloadTask.status == EngineImpl.Status.DOWNLOADING) {
+        if (getInfoByUrl(url) != null) {
+            if (getInfoByUrl(url).status == EngineImpl.Status.DOWNLOADING) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    public DownloadInfo getDownloadTaskByUrl(String url) {
-        if (mDownloadTaskList == null || TextUtils.isEmpty(url)) {
-            return null;
-        }
-        for (int i = 0; i < mDownloadTaskList.size(); i++) {
-            if (url.equals(mDownloadTaskList.get(i).url)) {
-                return mDownloadTaskList.get(i);
-            }
-        }
-        return null;
     }
 
     private void handleStart(String url, boolean isRestart) {
@@ -214,22 +220,19 @@ public class DownloadService extends Service {
     }
 
     public int getStatueByUrl(String url) {
-       DownloadInfo downloadTask = getDownloadTaskByUrl(url);
-        if (downloadTask != null) {
-            return downloadTask.status;
+        if (getInfoByUrl(url) != null) {
+            return getInfoByUrl(url).status;
         }
         return EngineImpl.Status.WAITING;
     }
 
     @Nullable
     public String getDownloadSavePath(String url) {
-        DownloadInfo downloadTask = getDownloadTaskByUrl(url);
-        if (downloadTask != null) {
-            return downloadTask.getFilePath() + ".apk";
+        if (getInfoByUrl(url) != null) {
+            return getInfoByUrl(url).getFilePath() + ".apk";
         }
         return null;
     }
-
 
     public static final int DOWN_OK = 1001;
     public static final int DOWN_ERROR = 1002;
@@ -243,15 +246,14 @@ public class DownloadService extends Service {
     public class UpdateHandler extends Handler {
         @Override
         public void handleMessage(@NonNull Message msg) {
-//            Log.e("----------msg", " ------- 下载过程  msg msg msg ---- msg   " + msg);
+
             DownloadInfo task = (DownloadInfo) msg.obj;
             if (task == null) {
                 return;
             }
-
             switch (msg.what) {
                 case DOWN_OK:
-                    Log.i("-------------msg", " -------下载完成 task URL : " + task.url);
+                    Log.i("-------------msg", " ------- 2222 下载完成 task URL : " + task.url);
                     // 下载完成，点击安装
                     File file = new File(task.getFilePath() + ".apk");
                     String fileName = file.getName().toUpperCase();

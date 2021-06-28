@@ -294,6 +294,11 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
         return null;
     }
 
+    @Override
+    public int getDownloaderType() {
+        return DownloadType.TYPE_API;
+    }
+
     @Nullable
     public String getDiskCachePath(Context context) {
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())

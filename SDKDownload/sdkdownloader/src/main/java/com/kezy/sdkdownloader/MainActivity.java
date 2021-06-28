@@ -8,7 +8,7 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.sdkdownloadlibs.DownloadTask;
-import com.kezy.sdkdownloadlibs.downloader.xima_v2.DownloadServiceManageV2;
+import com.kezy.sdkdownloadlibs.downloader.xima.DownloadServiceManage;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,14 +24,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        DownloadTask task = new DownloadTask(new DownloadServiceManageV2(MainActivity.this), new DownloadInfo(url_35MB));
-        DownloadTask task1 = new DownloadTask(new DownloadServiceManageV2(MainActivity.this), new DownloadInfo(url_113MB));
+        DownloadTask task = new DownloadTask(null, new DownloadInfo(url_35MB));
+        DownloadTask task1 = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_113MB));
 
         btnApi = findViewById(R.id.btn_api);
         btnApi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                task.start(MainActivity.this);
+//                task.start(MainActivity.this);
                 task1.start(MainActivity.this);
             }
         });

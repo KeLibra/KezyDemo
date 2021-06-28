@@ -31,6 +31,8 @@ import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.HANDLER_P
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.HANDLER_REMOVE;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.REQUEST_TIME_OUT;
 
+;
+
 
 /**
  * @Author Kezy
@@ -266,6 +268,15 @@ public class DownloadThread extends Thread{
                         if (updateCount > task.progress) {
                             task.progress = updateCount;
 //                            handleDownloadProgressUpdate(task.url, updateCount);
+                            // TODO: 2021/6/22  progress changed
+//                            Log.v("-------msg", " ------ progress = " + updateCount);
+                            if (handler != null) {
+                                Message message = Message.obtain();
+                                message.what = DOWNLOAD_ING;
+                                task.status = EngineImpl.Status.DOWNLOADING;
+                                message.obj = task;
+                                handler.sendMessage(message);
+                            }
                         }
                     }
                     if (System.currentTimeMillis() - mUpDateTimerMillis > 1000) {
@@ -273,15 +284,6 @@ public class DownloadThread extends Thread{
                         task.speed = downloadSpeed;         //下载速度赋值
                         speedTemp = curSize;
                         mUpDateTimerMillis = System.currentTimeMillis();
-                    }
-                    // TODO: 2021/6/22  progress changed
-//                    Log.v("-------msg", " ------ progress = " + updateCount);
-                    if (handler != null) {
-                        Message message = Message.obtain();
-                        message.what = DOWNLOAD_ING;
-                        task.status = EngineImpl.Status.DOWNLOADING;
-                        message.obj = task;
-                        handler.sendMessage(message);
                     }
                 }
             } catch (Exception e) {

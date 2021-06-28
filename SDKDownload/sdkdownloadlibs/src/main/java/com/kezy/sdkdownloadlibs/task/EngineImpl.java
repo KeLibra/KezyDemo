@@ -49,4 +49,6 @@ public interface EngineImpl<T> {
 
     // 获取下载文件路径
     String getDownloadFile(Context context, String downloadUrl);
+
+    int getDownloaderType();
 }

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -22,14 +23,14 @@ import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_APK_URL;
 
 /**
- * @author le.xin
  */
 public class DownloadServiceManage implements EngineImpl<String> {
 
     private boolean mConnected = false;
-    private Context mContext;
 
+    private Context mContext;
     public DownloadServiceManage(Context context) {
+        mContext = context.getApplicationContext();
         init(context);
     }
 
@@ -38,13 +39,22 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     private DownloadInfo mInfo;
 
+
     @Override
     public void bindDownloadInfo(DownloadInfo info) {
+
+        Log.e("----------", " -------- bindDownloadInfo " + mDownloadService);
+        if (mDownloadService != null) {
+            mDownloadService.setDownloadInfo(info);
+        } else {
+            mInfo = info;
+        }
     }
 
     @Override
     public DownloadInfo getInfo(String url) {
-        return null;
+        Log.i("-------msg", " v2 manager info " + mDownloadService.getDownloadInfo(url));
+        return mDownloadService.getDownloadInfo(url);
     }
 
     @Override
@@ -59,7 +69,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public void pauseDownload(Context context, String downloadUrl) {
-        if (!checkConnectionStatus()) {
+        if (!checkConnectionStatus(context)) {
             return;
         }
         if (mDownloadService != null) {
@@ -70,7 +80,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
     @Override
     public void continueDownload(Context context, String downloadUrl) {
 
-        if (!checkConnectionStatus()) {
+        if (!checkConnectionStatus(context)) {
             downLoadAPK(downloadUrl);
             return;
         }
@@ -81,7 +91,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public void deleteDownload(Context context, String downloadUrl) {
-        if (!checkConnectionStatus()) {
+        if (!checkConnectionStatus(context)) {
             return;
         }
         if (mDownloadService != null) {
@@ -99,23 +109,19 @@ public class DownloadServiceManage implements EngineImpl<String> {
         return mDownloadService.getDownloadSavePath(downloadUrl);
     }
 
+    @Override
+    public int getDownloaderType() {
+        return DownloadType.TYPE_XIMA;
+    }
+
     public void init(Context context) {
         if (context == null) {
             return;
         }
-
-        this.mContext = context.getApplicationContext();
-        mContext.bindService(new Intent(mContext, DownloadService.class), mConn, Context.BIND_AUTO_CREATE);
+        Log.e("----------", " -------- init ");
+        context.bindService(new Intent(context, DownloadService.class), mConn, Context.BIND_AUTO_CREATE);
     }
 
-    public void bindDownloadServiceService(Context context) {
-        if (context == null) {
-            return;
-        }
-
-        context.bindService(new Intent(context, DownloadService.class),
-                mConn, Context.BIND_AUTO_CREATE);
-    }
 
     public void unBindDownloadService(Context context) {
         try {
@@ -136,17 +142,18 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.e("----------", " -------- onServiceConnected ");
             if (service instanceof DownloadService.Binder) {
                 mConnected = true;
                 mDownloadService = ((DownloadService.Binder) service).getService();
-                onServiceConnectedCallBack();
+                mDownloadService.setDownloadInfo(mInfo);
             }
         }
     };
 
-    private boolean checkConnectionStatus() {
+    private boolean checkConnectionStatus(Context context) {
         if (!mConnected || mDownloadService == null) {
-            init(mContext);
+            init(context);
             return false;
         }
         return true;
@@ -156,9 +163,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
     private void onServiceConnectedCallBack() {
     }
     public int getStatueByUrl(String url) {
-        if (!checkConnectionStatus()) {
-            return Status.WAITING;
-        }
 
         if (mDownloadService != null) {
             return mDownloadService.getStatueByUrl(url);
@@ -169,9 +173,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Nullable
     public String getDownloadSavePath(String url) {
-        if (!checkConnectionStatus()) {
-            return null;
-        }
 
         if (mDownloadService != null) {
             return mDownloadService.getDownloadSavePath(url);
@@ -181,9 +182,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     public boolean isDowning(String url) {
-        if (!checkConnectionStatus()) {
-            return false;
-        }
 
         if (mDownloadService != null) {
             return mDownloadService.isDowning(url);
