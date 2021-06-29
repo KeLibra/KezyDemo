@@ -269,7 +269,7 @@ public class DownloadThread extends Thread{
                             task.progress = updateCount;
 //                            handleDownloadProgressUpdate(task.url, updateCount);
                             // TODO: 2021/6/22  progress changed
-//                            Log.v("-------msg", " ------ progress = " + updateCount);
+                            Log.v("-------msg", "handler = " + handler +" ------ progress = " + updateCount );
                             if (handler != null) {
                                 Message message = Message.obtain();
                                 message.what = DOWNLOAD_ING;

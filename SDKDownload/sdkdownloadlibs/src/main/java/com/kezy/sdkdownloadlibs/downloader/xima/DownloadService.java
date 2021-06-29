@@ -1,6 +1,8 @@
 package com.kezy.sdkdownloadlibs.downloader.xima;
 
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -11,6 +13,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.kezy.notifylib.NotificationsManager;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.task.EngineImpl;
 
@@ -45,6 +48,8 @@ public class DownloadService extends Service {
      * @Fields mDownloadTaskList : 正在下载的任务
      */
     private List<DownloadInfo> mDownloadTaskList = new ArrayList<>();
+
+    private NotificationManager mNotifyManager;
 
     public DownloadInfo getDownloadInfo(String url) {
 
@@ -81,8 +86,9 @@ public class DownloadService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mBinder = new Binder();
-        mHandler = new UpdateHandler();
+        mHandler = new UpdateHandler(this);
     }
 
     @Override
@@ -96,7 +102,6 @@ public class DownloadService extends Service {
             if (PAUSE_ACTION.equals(action)) {
                 pauseDownload(downloadUrl);
             } else if (CANCLE_ACTION.equals(action)) {
-
                 removeDownload(downloadUrl);
             } else if (RESUME_ACTION.equals(action)) {
                 startDownload(downloadUrl);
@@ -119,6 +124,13 @@ public class DownloadService extends Service {
                     }
                     if (dt.status == EngineImpl.Status.STOPPED) {
                         startDownload(dt.url);
+                    }
+                    if (dt.status == EngineImpl.Status.FINISHED) {
+                        File file = new File(dt.path);
+                        if (file == null || !file.exists()) {
+                            Log.i("-------msg", "------- 已下载完成过了，但是apk被删除了，需要重新下载 ");
+                            startDownload(dt.url);
+                        }
                     }
                     return super.onStartCommand(intent, flags, startId);
                 }
@@ -244,9 +256,15 @@ public class DownloadService extends Service {
     public static final int HANDLER_SHOW_RETRY_NOTIF = 1008;
 
     public class UpdateHandler extends Handler {
+
+        private Context mContext;
+        public UpdateHandler(Context context) {
+            mContext = context;
+        }
+
         @Override
         public void handleMessage(@NonNull Message msg) {
-
+            Log.i("-------------msg", " ------- handleMessage : " + msg.toString());
             DownloadInfo task = (DownloadInfo) msg.obj;
             if (task == null) {
                 return;
@@ -262,13 +280,15 @@ public class DownloadService extends Service {
                             || !fileName.endsWith(".APK")) {
                         return;
                     }
+                    NotificationsManager.getInstance().clearNotificationById(mNotifyManager, (int) task.timeId);
                     break;
 
                 case DOWN_ERROR:
                     Log.e("----------msg", " ------- err ----   ");
                     break;
                 case DOWNLOAD_ING:
-//                    Log.e("----------msg", " ------- ing ----   " + task.progress);
+                    Log.e("----------msg", " ------- ing ----   " + task.progress);
+                    NotificationsManager.getInstance().sendProgressViewNotification(mContext, mNotifyManager, task.progress, task.timeId);
                     break;
                 case REQUEST_TIME_OUT:
                     Log.e("----------msg", " ------- REQUEST_TIME_OUT ----   ");

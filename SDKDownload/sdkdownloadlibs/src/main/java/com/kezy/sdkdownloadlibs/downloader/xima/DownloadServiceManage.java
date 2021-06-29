@@ -29,6 +29,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
     private boolean mConnected = false;
 
     private Context mContext;
+
     public DownloadServiceManage(Context context) {
         mContext = context.getApplicationContext();
         init(context);

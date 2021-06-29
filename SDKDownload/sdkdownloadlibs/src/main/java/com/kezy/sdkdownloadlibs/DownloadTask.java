@@ -31,16 +31,25 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl{
     }
 
     public int getStatus(String url) {
+       if (mTaskManager == null || mTaskManager.getInfo(url) == null) {
+           return 0;
+       }
        return mTaskManager.getInfo(url).status;
     }
 
     @Override
     public int getDownloadType(String url) {
+        if (mTaskManager == null || mTaskManager.getInfo(url) == null) {
+            return -1;
+        }
         return mTaskManager.getInfo(url).downloadType;
     }
 
     @Override
     public String createDownloadKey(Context context, String downloadUrl) {
+        if (mTaskManager == null || mTaskManager.getInfo(downloadUrl) == null) {
+            return "null";
+        }
         return mTaskManager.getInfo(downloadUrl).url + mTaskManager.getInfo(downloadUrl).adId;
     }
 
