@@ -5,6 +5,7 @@ import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.Uri;
@@ -162,8 +163,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                 long lastDownloadId = downloadManager.enqueue(request);
                 createTask(lastDownloadId, appName);
                 // 如需要进度及下载状态，增加下载监听
-                AdApiDownloadHandler downloadHandler = new AdApiDownloadHandler();
-                downloadObserver = new ApiDownloadObserver(downloadHandler, downloadManager, lastDownloadId);
+                downloadObserver = new ApiDownloadObserver(lastDownloadId);
                 context.getContentResolver().registerContentObserver(Uri.parse("content://downloads/my_downloads"), true, downloadObserver);
                 Toast.makeText(context, "apk 开始下载", Toast.LENGTH_LONG).show();
             }
@@ -231,38 +231,6 @@ public class ApiDownloadManager implements EngineImpl<Long> {
         context.getContentResolver().unregisterContentObserver(downloadObserver);
     }
 
-    /**
-     * 安装app
-     *
-     * @param apkFile 下载的文件
-     */
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public void installApp(Context context, File apkFile) {
-        try {
-            // 安装
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
-            } else {
-                boolean allowInstall = context.getPackageManager().canRequestPackageInstalls();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    if (!allowInstall) {
-                        //不允许安装未知来源应用，请求安装未知应用来源的权限
-                        return;
-                    }
-                }
-                //Android7.0之后获取uri要用contentProvider
-                Uri apkUri = FileProvider.getUriForFile(context.getApplicationContext(), context.getPackageName() + ".fileProvider", apkFile);
-                //Granting Temporary Permissions to a URI
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-            }
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 获取下载的文件
@@ -319,28 +287,102 @@ public class ApiDownloadManager implements EngineImpl<Long> {
         }
     }
 
-    public class AdApiDownloadHandler extends Handler {
 
-        @RequiresApi(api = Build.VERSION_CODES.O)
+    public class ApiDownloadObserver extends ContentObserver {
+
+        private final String TAG = "-------msg" + getClass().getCanonicalName();
+        /**
+         * 记录成功或者失败的状态，主要用来只发送一次成功或者失败
+         */
+        private boolean isEnd = false;
+
+        private final DownloadManager.Query query;
+
+        private long mDownloadId;
+
+        /**
+         * Creates a content observer.
+         *
+         */
+        public ApiDownloadObserver(long downloadId) {
+            super(new Handler());
+            this.mDownloadId = downloadId;
+            query = new DownloadManager.Query().setFilterById(downloadId);
+        }
+
         @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            DownloadInfo task = (DownloadInfo) msg.obj;
+        public void onChange(boolean selfChange) {
+            super.onChange(selfChange);
+            queryDownloadStatus();
+        }
 
-            if (task == null) {
-                return;
-            }
-            Log.e("--------msg", " -------- 下载 状态 --- " + task.url);
+        /**
+         * 检查下载的状态
+         */
+        private void queryDownloadStatus() {
+            // Java 7 新的 try-with-resources ，凡是实现了AutoCloseable接口的可自动close()，所以此处不需要手动cursor.close()
+            try (Cursor cursor = downloadManager.query(query)) {
+                if (cursor != null && cursor.moveToNext()) {
+                    int status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
+                    long totalSize = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                    long currentSize = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    // 当前进度
+                    int mProgress;
+                    if (totalSize != 0) {
+                        mProgress = (int) ((currentSize * 100) / totalSize);
+                    } else {
+                        mProgress = 0;
+                    }
+                    mInfo.taskId = mDownloadId;
+                    mInfo.progress = mProgress;
+                    mInfo.totalSize = totalSize;
+                    mInfo.tempSize = currentSize;
+                    if (getDownloadFile(null) != null && TextUtils.isEmpty(mInfo.path)) {
+                        mInfo.path = getDownloadFile(null);
+                    }
 
-            if (mInfo != null) {
-                mInfo.status = task.status;
-                mInfo.isRunning = task.isRunning;
-                mInfo.progress = task.progress;
-                mInfo.totalSize = task.totalSize;
-                mInfo.tempSize = task.tempSize;
-                if (getDownloadFile(null) != null && TextUtils.isEmpty(mInfo.path)) {
-                    mInfo.path = getDownloadFile(null);
+                    Log.d(TAG, String.valueOf(mProgress));
+                    switch (status) {
+                        case DownloadManager.STATUS_PAUSED:
+                            mInfo.isRunning = false;
+                            mInfo.status = EngineImpl.Status.STOPPED;
+                            Log.d(TAG, "STATUS_PAUSED");
+                            break;
+                        case DownloadManager.STATUS_PENDING:
+                            // 开始下载
+                            mInfo.isRunning = true;
+                            mInfo.status = Status.STARTED;
+                            Log.d(TAG, "STATUS_PENDING");
+                            break;
+                        case DownloadManager.STATUS_RUNNING:
+                            mInfo.isRunning = true;
+                            mInfo.status = EngineImpl.Status.DOWNLOADING;
+
+                            Log.d(TAG, "STATUS_RUNNING");
+                            break;
+                        case DownloadManager.STATUS_SUCCESSFUL:
+                            if (!isEnd) {
+                                // 完成
+                                mInfo.isRunning = false;
+                                mInfo.status = EngineImpl.Status.FINISHED;
+                                Log.d(TAG, "STATUS_SUCCESSFUL");
+                            }
+                            isEnd = true;
+                            break;
+                        case DownloadManager.STATUS_FAILED:
+                            if (!isEnd) {
+                                mInfo.isRunning = false;
+                                mInfo.status = EngineImpl.Status.ERROR;
+                                Log.d(TAG, "STATUS_FAILED");
+                            }
+                            isEnd = true;
+                            break;
+                        default:
+                            break;
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

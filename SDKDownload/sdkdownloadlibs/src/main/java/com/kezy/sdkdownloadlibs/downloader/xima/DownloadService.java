@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.kezy.notifylib.NotificationsManager;
+import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
@@ -242,7 +243,7 @@ public class DownloadService extends Service {
     @Nullable
     public String getDownloadSavePath(String url) {
         if (getDownloadInfoByUrl(url) != null) {
-            return getDownloadInfoByUrl(url).getFilePath() + ".apk";
+            return getDownloadInfoByUrl(url).getFilePath();
         }
         return null;
     }
@@ -281,14 +282,9 @@ public class DownloadService extends Service {
                 case DOWN_OK:
                     Log.i("-------------msg", " ------- 2222 下载完成 task URL : " + task.url);
                     // 下载完成，点击安装
-                    File file = new File(task.getFilePath() + ".apk");
-                    String fileName = file.getName().toUpperCase();
-                    Log.e("----------msg", " ------- 下载完成 ----fileName   " + fileName);
-                    if (TextUtils.isEmpty(fileName)
-                            || !fileName.endsWith(".APK")) {
-                        return;
-                    }
+                    Log.e("----------msg", " ------- 下载完成22 ----fileName   " + task.path);
                     NotificationsManager.getInstance().clearNotificationById(mNotifyManager, (int) task.timeId);
+                    DownloadUtils.installApk(mContext, task.path);
                     break;
 
                 case DOWN_ERROR:

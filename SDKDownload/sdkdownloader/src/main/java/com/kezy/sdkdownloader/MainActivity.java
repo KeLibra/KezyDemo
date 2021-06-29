@@ -1,6 +1,5 @@
 package com.kezy.sdkdownloader;
 
-import android.app.NotificationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,8 +10,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.notifylib.NotificationChannels;
+import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
+import com.kezy.sdkdownloadlibs.downloader.xima.DownloadServiceManage;
 import com.kezy.sdkdownloadlibs.task.DownloadTask;
-import com.kezy.sdkdownloadlibs.downloader.api.ApiDownloadManager;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,8 +24,6 @@ public class MainActivity extends AppCompatActivity {
     private String url_35MB = "http://b.xzfile.com/apk3/xgmfxsv1.0.9.241_downcc.com.apk";
 
 
-    NotificationManager mNotifyManager;
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,18 +32,18 @@ public class MainActivity extends AppCompatActivity {
 
         NotificationChannels.createAllNotificationChannels(MainActivity.this);
 
-//        DownloadTask task = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_35MB));
+        DownloadTask task = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_35MB));
 //        DownloadTask task1 = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_113MB));
 
-        DownloadTask task = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_35MB));
-        DownloadTask task1 = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_113MB));
+//        DownloadTask task = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_35MB));
+//        DownloadTask task1 = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_113MB));
 
         btnApi = findViewById(R.id.btn_api);
         btnApi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 task.start(MainActivity.this);
-                task1.start(MainActivity.this);
+//                task1.start(MainActivity.this);
             }
         });
 
@@ -56,8 +54,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.e("-----------msg", "  -==== 1111 " + task.getStatus());
-                Log.e("-----------msg", "  -====  22222 " + task1.getStatus());
+//                Log.e("-----------msg", "  -====  22222 " + task1.getStatus());
 
+                DownloadUtils.installApk(MainActivity.this, task.mDownloadInfo.path);
             }
         });
     }

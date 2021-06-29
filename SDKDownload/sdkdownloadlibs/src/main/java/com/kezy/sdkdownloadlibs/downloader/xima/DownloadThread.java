@@ -82,7 +82,9 @@ public class DownloadThread extends Thread{
                 message = Message.obtain();
                 message.what = DOWN_OK;
                 mTask.status = EngineImpl.Status.FINISHED;
+                mTask.path = mTask.getFilePath();
                 message.obj = mTask;
+
                 Log.e("----------msg", " ------- 下载完成 ---- downloadSize " + downloadSize);
             } else {
                 mTask.status = EngineImpl.Status.ERROR;
@@ -268,7 +270,6 @@ public class DownloadThread extends Thread{
                         if (updateCount > task.progress) {
                             task.progress = updateCount;
 //                            handleDownloadProgressUpdate(task.url, updateCount);
-                            // TODO: 2021/6/22  progress changed
                             Log.v("-------msg", "handler = " + handler +" ------ progress = " + updateCount );
                             if (handler != null) {
                                 Message message = Message.obtain();
@@ -299,6 +300,7 @@ public class DownloadThread extends Thread{
             // 如果下载完成
             if (task.totalSize == task.tempSize || task.totalSize == 0) {
                 file.renameTo(new File(task.path, task.name + ".apk"));
+                Log.e("---------msg", " ---- 下载完成 file ------ " + file.getPath());
                 downloadedLength = task.tempSize;
                 task.tempSize = 0;
                 task.totalSize = 0;

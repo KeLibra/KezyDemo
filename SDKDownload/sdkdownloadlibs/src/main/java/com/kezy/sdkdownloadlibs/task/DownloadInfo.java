@@ -52,7 +52,8 @@ public class DownloadInfo {
                 /*
                  * .append(Environment.getExternalStorageDirectory())
                  * .append(File.separator)
-                 */.append(path).append(File.separator).append(name).toString();
+                 */
+                .append(path).append(File.separator).append(name).append(".apk").toString();
     }
 
 

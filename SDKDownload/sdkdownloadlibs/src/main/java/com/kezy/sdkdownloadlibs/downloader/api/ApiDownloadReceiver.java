@@ -11,6 +11,8 @@ import android.text.TextUtils;
 
 import androidx.core.content.FileProvider;
 
+import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
+
 import java.io.File;
 import java.util.Objects;
 
@@ -56,21 +58,7 @@ public class ApiDownloadReceiver extends BroadcastReceiver {
                 String fileUri = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                 String path = Uri.parse(fileUri).getPath();
                 cursor.close();
-                if (!TextUtils.isEmpty(path)) {
-                    File apkFile = new File(path);
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                        intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
-                    } else {
-                        //Android7.0之后获取uri要用contentProvider
-                        Uri apkUri = FileProvider.getUriForFile(context.getApplicationContext(), context.getPackageName() + ".fileProvider", apkFile);
-                        //Granting Temporary Permissions to a URI
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                    }
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
-                }
+                DownloadUtils.installApk(context, path);
             }
         } catch (Exception e) {
             e.printStackTrace();
