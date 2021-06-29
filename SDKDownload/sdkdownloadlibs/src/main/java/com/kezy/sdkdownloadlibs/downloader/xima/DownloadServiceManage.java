@@ -54,8 +54,8 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public DownloadInfo getInfo(String url) {
-        Log.i("-------msg", " v2 manager info " + mDownloadService.getDownloadInfo(url));
-        return mDownloadService.getDownloadInfo(url);
+        Log.i("-------msg", " v2 manager info " + mDownloadService.getDownloadInfoByUrl(url));
+        return mDownloadService.getDownloadInfoByUrl(url);
     }
 
     @Override
@@ -196,7 +196,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
         if (TextUtils.isEmpty(downUrl)) {
             return;
         }
-
         try {
             goDownloadApk(URLDecoder.decode(downUrl, "utf-8"), fileName);
         } catch (UnsupportedEncodingException e) {

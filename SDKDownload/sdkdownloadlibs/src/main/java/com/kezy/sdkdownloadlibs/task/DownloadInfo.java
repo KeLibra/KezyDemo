@@ -36,8 +36,12 @@ public class DownloadInfo {
 
     public int downloadType; // 下载器类型
 
+    private DownloadInfo() {
+        this.timeId = System.currentTimeMillis();
+    }
 
     public DownloadInfo(String url) {
+        this();
         this.url = url;
     }
 

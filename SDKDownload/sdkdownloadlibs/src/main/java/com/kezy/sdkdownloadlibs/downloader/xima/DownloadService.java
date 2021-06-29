@@ -51,18 +51,14 @@ public class DownloadService extends Service {
 
     private NotificationManager mNotifyManager;
 
-    public DownloadInfo getDownloadInfo(String url) {
-
-       return getInfoByUrl(url);
-    }
 
     public void setDownloadInfo(DownloadInfo info) {
-       if (mDownloadTaskList.contains(info)) {
+       if (!mDownloadTaskList.contains(info)) {
            mDownloadTaskList.add(info);
        }
     }
 
-    private DownloadInfo getInfoByUrl(String url) {
+    public DownloadInfo getDownloadInfoByUrl(String url) {
         for (DownloadInfo task : mDownloadTaskList) {
             if (TextUtils.equals(url, task.url)) {
                 return task;
@@ -113,6 +109,9 @@ public class DownloadService extends Service {
         if (info != null) {
             for (DownloadInfo dt : mDownloadTaskList) {
                 if (info.equals(dt)) {
+                    if (dt.status == EngineImpl.Status.WAITING) {
+                        startDownload(dt.url);
+                    }
                     if (isDowning(dt.url)) {
                         // 如果是重新下载，触发一下 下载开始回调
                         handleStart(dt.url, true);
@@ -148,36 +147,36 @@ public class DownloadService extends Service {
 
 
     public void startDownload(String url) {
-        if (getInfoByUrl(url) == null) {
+        if (getDownloadInfoByUrl(url) == null) {
             return;
         }
-        getInfoByUrl(url).isRunning = true;
-        Log.e("-------msg", "startDownload  --- task.isRunning = " + getInfoByUrl(url).isRunning);
-        if (getInfoByUrl(url).status != EngineImpl.Status.DOWNLOADING) {
-            getInfoByUrl(url).status = EngineImpl.Status.DOWNLOADING;
-            DownloadThread thread = new DownloadThread(getApplicationContext(), getInfoByUrl(url), mHandler);
-            getInfoByUrl(url).retryCount = 0;
-            getInfoByUrl(url).isRunning = true;
+        getDownloadInfoByUrl(url).isRunning = true;
+        Log.e("-------msg", "startDownload  --- task.isRunning = " + getDownloadInfoByUrl(url).isRunning);
+        if (getDownloadInfoByUrl(url).status != EngineImpl.Status.DOWNLOADING) {
+            getDownloadInfoByUrl(url).status = EngineImpl.Status.DOWNLOADING;
+            DownloadThread thread = new DownloadThread(getApplicationContext(), getDownloadInfoByUrl(url), mHandler);
+            getDownloadInfoByUrl(url).retryCount = 0;
+            getDownloadInfoByUrl(url).isRunning = true;
             thread.start();
         }
     }
 
     public void pauseDownload(String url) {
-        if (getInfoByUrl(url) != null && getInfoByUrl(url).isRunning) {
-            getInfoByUrl(url).isRunning = false;
-            getInfoByUrl(url).status = EngineImpl.Status.STOPPED;
+        if (getDownloadInfoByUrl(url) != null && getDownloadInfoByUrl(url).isRunning) {
+            getDownloadInfoByUrl(url).isRunning = false;
+            getDownloadInfoByUrl(url).status = EngineImpl.Status.STOPPED;
         }
     }
 
     public void removeDownload(String url) {
-        if (getInfoByUrl(url) != null) {
-            getInfoByUrl(url).status = EngineImpl.Status.DELETE;
-            getInfoByUrl(url).isRunning = false;
-            String filePath = getInfoByUrl(url).getFilePath();
+        if (getDownloadInfoByUrl(url) != null) {
+            getDownloadInfoByUrl(url).status = EngineImpl.Status.DELETE;
+            getDownloadInfoByUrl(url).isRunning = false;
+            String filePath = getDownloadInfoByUrl(url).getFilePath();
             if (filePath != null && new File(filePath).exists()) {
                 new File(filePath).delete();
             }
-            File tempDownloadPath = getTempDownloadPath(getInfoByUrl(url));
+            File tempDownloadPath = getTempDownloadPath(getDownloadInfoByUrl(url));
             if (tempDownloadPath != null && tempDownloadPath.exists()) {
                 tempDownloadPath.delete();
             }
@@ -185,20 +184,17 @@ public class DownloadService extends Service {
     }
 
     private DownloadInfo initDownloadTask(Intent intent) {
+        DownloadInfo info;
         if (null != intent) {
             String mFileName = intent.getStringExtra(DOWNLOAD_APK_NAME);
             String mDownloadUrl = intent.getStringExtra(DOWNLOAD_APK_URL);
-            long spfileSize = 0;
-            long spTemp = 0;
             if (!TextUtils.isEmpty(mDownloadUrl)) {
-                DownloadInfo info = new DownloadInfo(mDownloadUrl);
-                info.timeId = System.currentTimeMillis();
-                info.url = mDownloadUrl;
-                info.name = mFileName;
-                if (spfileSize > 0 && spTemp > 0) {
-                    info.totalSize = spfileSize;
-                    info.tempSize = spTemp;
-                    info.progress = (int) ((spTemp * 100) / spfileSize);
+                if (getDownloadInfoByUrl(mDownloadUrl) != null) {
+                    info = getDownloadInfoByUrl(mDownloadUrl);
+                } else {
+                    info = new DownloadInfo(mDownloadUrl);
+                    info.url = mDownloadUrl;
+                    info.name = mFileName;
                 }
                 return info;
             }
@@ -207,8 +203,8 @@ public class DownloadService extends Service {
     }
 
     public boolean isDowning(String url) {
-        if (getInfoByUrl(url) != null) {
-            if (getInfoByUrl(url).status == EngineImpl.Status.DOWNLOADING) {
+        if (getDownloadInfoByUrl(url) != null) {
+            if (getDownloadInfoByUrl(url).status == EngineImpl.Status.DOWNLOADING) {
                 return true;
             }
         }
@@ -232,16 +228,16 @@ public class DownloadService extends Service {
     }
 
     public int getStatueByUrl(String url) {
-        if (getInfoByUrl(url) != null) {
-            return getInfoByUrl(url).status;
+        if (getDownloadInfoByUrl(url) != null) {
+            return getDownloadInfoByUrl(url).status;
         }
         return EngineImpl.Status.WAITING;
     }
 
     @Nullable
     public String getDownloadSavePath(String url) {
-        if (getInfoByUrl(url) != null) {
-            return getInfoByUrl(url).getFilePath() + ".apk";
+        if (getDownloadInfoByUrl(url) != null) {
+            return getDownloadInfoByUrl(url).getFilePath() + ".apk";
         }
         return null;
     }
@@ -250,10 +246,8 @@ public class DownloadService extends Service {
     public static final int DOWN_ERROR = 1002;
     public static final int DOWNLOAD_ING = 1003;
     public static final int REQUEST_TIME_OUT = 1004;
-    public static final int REQUEST_TIME_OUT_RETRY = 1005;
     public static final int HANDLER_PAUSE = 1006;
     public static final int HANDLER_REMOVE = 1007;
-    public static final int HANDLER_SHOW_RETRY_NOTIF = 1008;
 
     public class UpdateHandler extends Handler {
 
@@ -268,6 +262,15 @@ public class DownloadService extends Service {
             DownloadInfo task = (DownloadInfo) msg.obj;
             if (task == null) {
                 return;
+            }
+
+            if (getDownloadInfoByUrl(task.url) != null) {
+                getDownloadInfoByUrl(task.url).status = task.status;
+                getDownloadInfoByUrl(task.url).isRunning = task.isRunning;
+                getDownloadInfoByUrl(task.url).progress = task.progress;
+                getDownloadInfoByUrl(task.url).totalSize = task.totalSize;
+                getDownloadInfoByUrl(task.url).tempSize = task.tempSize;
+
             }
             switch (msg.what) {
                 case DOWN_OK:
@@ -293,17 +296,11 @@ public class DownloadService extends Service {
                 case REQUEST_TIME_OUT:
                     Log.e("----------msg", " ------- REQUEST_TIME_OUT ----   ");
                     break;
-                case REQUEST_TIME_OUT_RETRY:
-                    Log.e("----------msg", " ------- REQUEST_TIME_OUT_RETRY ----   ");
-                    break;
                 case HANDLER_PAUSE:
                     Log.e("----------msg", " ------- HANDLER_PAUSE ----   ");
                     break;
                 case HANDLER_REMOVE:
                     Log.e("----------msg", " ------- HANDLER_REMOVE ----   ");
-                    break;
-                case HANDLER_SHOW_RETRY_NOTIF:
-                    Log.e("----------msg", " ------- HANDLER_SHOW_RETRY_NOTIF ----   ");
                     break;
                 default:
                     break;
