@@ -1,6 +1,10 @@
 package com.kezy.sdkdownloadlibs;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.util.Log;
 
 import com.kezy.sdkdownloadlibs.downloader.api.AdApiDownloadManager;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
@@ -14,6 +18,7 @@ import com.kezy.sdkdownloadlibs.task.EngineImpl;
 public class DownloadTask<T extends EngineImpl> implements TaskImpl{
     public T mTaskManager;
     public DownloadInfo mDownloadInfo;
+    private Context mContext;
 
 
    public DownloadTask(T taskManager, DownloadInfo info) {
@@ -30,6 +35,17 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl{
         mTaskManager.startDownload(context, mDownloadInfo.url);
     }
 
+    private ServiceConnection mConn = new ServiceConnection() {
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.e("---------msg", "------ binder ---- " + service);
+        }
+    };
     public int getStatus(String url) {
        if (mTaskManager == null || mTaskManager.getInfo(url) == null) {
            return 0;

@@ -26,7 +26,7 @@ import java.util.List;
  * @Time 2021/6/22
  * @Description
  */
-public class DownloadService extends Service {
+public class DownloadService extends Service implements EngineImpl<String>{
 
     private static final String TAG = "-----msg download v2";
     private Binder mBinder;
@@ -51,13 +51,6 @@ public class DownloadService extends Service {
 
     private NotificationManager mNotifyManager;
 
-
-    public void setDownloadInfo(DownloadInfo info) {
-       if (!mDownloadTaskList.contains(info)) {
-           mDownloadTaskList.add(info);
-       }
-    }
-
     public DownloadInfo getDownloadInfoByUrl(String url) {
         for (DownloadInfo task : mDownloadTaskList) {
             if (TextUtils.equals(url, task.url)) {
@@ -73,6 +66,95 @@ public class DownloadService extends Service {
         return mBinder;
     }
 
+    @Override
+    public void bindDownloadInfo(DownloadInfo info) {
+        if (!mDownloadTaskList.contains(info)) {
+            mDownloadTaskList.add(info);
+        }
+    }
+
+    @Override
+    public DownloadInfo getInfo(String url) {
+        return getDownloadInfoByUrl(url);
+    }
+
+    @Override
+    public long getTaskId(String downloadUrl) {
+        if (getDownloadInfoByUrl(downloadUrl) != null) {
+            return getDownloadInfoByUrl(downloadUrl).taskId;
+        }
+        return -1;
+    }
+
+    @Override
+    public void startDownload(Context context, String url) {
+        Intent intent = new Intent(context, DownloadService.class);
+        intent.putExtra(DOWNLOAD_APK_URL, url);
+        context.startService(intent);
+    }
+
+    private void startDownload(String url) {
+        if (getDownloadInfoByUrl(url) == null) {
+            return;
+        }
+        getDownloadInfoByUrl(url).isRunning = true;
+        Log.e("-------msg", "startDownload  --- task.isRunning = " + getDownloadInfoByUrl(url).isRunning);
+        if (getDownloadInfoByUrl(url).status != EngineImpl.Status.DOWNLOADING) {
+            getDownloadInfoByUrl(url).status = EngineImpl.Status.DOWNLOADING;
+            DownloadThread thread = new DownloadThread(this, getDownloadInfoByUrl(url), mHandler);
+            getDownloadInfoByUrl(url).retryCount = 0;
+            getDownloadInfoByUrl(url).isRunning = true;
+            thread.start();
+        }
+    }
+
+    @Override
+    public void pauseDownload(Context context, String url) {
+        if (getDownloadInfoByUrl(url) != null && getDownloadInfoByUrl(url).isRunning) {
+            getDownloadInfoByUrl(url).isRunning = false;
+            getDownloadInfoByUrl(url).status = EngineImpl.Status.STOPPED;
+        }
+    }
+
+    @Override
+    public void continueDownload(Context context, String downloadUrl) {
+        startDownload(downloadUrl);
+    }
+
+    @Override
+    public void deleteDownload(Context context, String url) {
+        if (getDownloadInfoByUrl(url) != null) {
+            getDownloadInfoByUrl(url).status = EngineImpl.Status.DELETE;
+            getDownloadInfoByUrl(url).isRunning = false;
+            String filePath = getDownloadInfoByUrl(url).getFilePath();
+            if (filePath != null && new File(filePath).exists()) {
+                new File(filePath).delete();
+            }
+            File tempDownloadPath = getTempDownloadPath(getDownloadInfoByUrl(url));
+            if (tempDownloadPath != null && tempDownloadPath.exists()) {
+                tempDownloadPath.delete();
+            }
+        }
+    }
+
+    @Override
+    public int getStatus(Context context, String downloadUrl) {
+        return 0;
+    }
+
+    @Override
+    public String getDownloadFile(Context context, String downloadUrl) {
+        if (getDownloadInfoByUrl(downloadUrl) != null) {
+           return getDownloadInfoByUrl(downloadUrl).path;
+        }
+        return null;
+    }
+
+    @Override
+    public int getDownloaderType() {
+        return DownloadType.TYPE_XIMA;
+    }
+
     public class Binder extends android.os.Binder {
         public DownloadService getService() {
             return DownloadService.this;
@@ -82,6 +164,7 @@ public class DownloadService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.e("---------msg", " --------- onCreate");
         mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mBinder = new Binder();
         mHandler = new UpdateHandler(this);
@@ -96,9 +179,9 @@ public class DownloadService extends Service {
             Log.d(TAG, "onStartCommand " + action);
 
             if (PAUSE_ACTION.equals(action)) {
-                pauseDownload(downloadUrl);
+                pauseDownload(this, downloadUrl);
             } else if (CANCLE_ACTION.equals(action)) {
-                removeDownload(downloadUrl);
+                deleteDownload(this, downloadUrl);
             } else if (RESUME_ACTION.equals(action)) {
                 startDownload(downloadUrl);
             }
@@ -146,54 +229,18 @@ public class DownloadService extends Service {
     }
 
 
-    public void startDownload(String url) {
-        if (getDownloadInfoByUrl(url) == null) {
-            return;
-        }
-        getDownloadInfoByUrl(url).isRunning = true;
-        Log.e("-------msg", "startDownload  --- task.isRunning = " + getDownloadInfoByUrl(url).isRunning);
-        if (getDownloadInfoByUrl(url).status != EngineImpl.Status.DOWNLOADING) {
-            getDownloadInfoByUrl(url).status = EngineImpl.Status.DOWNLOADING;
-            DownloadThread thread = new DownloadThread(getApplicationContext(), getDownloadInfoByUrl(url), mHandler);
-            getDownloadInfoByUrl(url).retryCount = 0;
-            getDownloadInfoByUrl(url).isRunning = true;
-            thread.start();
-        }
-    }
-
-    public void pauseDownload(String url) {
-        if (getDownloadInfoByUrl(url) != null && getDownloadInfoByUrl(url).isRunning) {
-            getDownloadInfoByUrl(url).isRunning = false;
-            getDownloadInfoByUrl(url).status = EngineImpl.Status.STOPPED;
-        }
-    }
-
-    public void removeDownload(String url) {
-        if (getDownloadInfoByUrl(url) != null) {
-            getDownloadInfoByUrl(url).status = EngineImpl.Status.DELETE;
-            getDownloadInfoByUrl(url).isRunning = false;
-            String filePath = getDownloadInfoByUrl(url).getFilePath();
-            if (filePath != null && new File(filePath).exists()) {
-                new File(filePath).delete();
-            }
-            File tempDownloadPath = getTempDownloadPath(getDownloadInfoByUrl(url));
-            if (tempDownloadPath != null && tempDownloadPath.exists()) {
-                tempDownloadPath.delete();
-            }
-        }
-    }
 
     private DownloadInfo initDownloadTask(Intent intent) {
         DownloadInfo info;
         if (null != intent) {
-            String mFileName = intent.getStringExtra(DOWNLOAD_APK_NAME);
+
             String mDownloadUrl = intent.getStringExtra(DOWNLOAD_APK_URL);
             if (!TextUtils.isEmpty(mDownloadUrl)) {
                 if (getDownloadInfoByUrl(mDownloadUrl) != null) {
                     info = getDownloadInfoByUrl(mDownloadUrl);
                 } else {
+                    String mFileName = intent.getStringExtra(DOWNLOAD_APK_NAME);
                     info = new DownloadInfo(mDownloadUrl);
-                    info.url = mDownloadUrl;
                     info.name = mFileName;
                 }
                 return info;

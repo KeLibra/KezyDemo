@@ -54,7 +54,7 @@ public class DownloadThread extends Thread{
 
     @Override
     public void run() {
-        Log.d("mydownload", "start" + mTask.name + "@ " + mTask.retryCount);
+        Log.d("mydownload", "start: " + mTask.name + ", @ " + mTask.retryCount);
         Message message = null;
         if (weakHandler == null ||  weakHandler.get() == null) {
             return;
