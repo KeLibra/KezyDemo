@@ -89,7 +89,7 @@ public class AdApiDownloadObserver extends ContentObserver {
                     case DownloadManager.STATUS_PENDING:
                         // 开始下载
                         task.isRunning = true;
-                        task.status = EngineImpl.Status.STARTED;
+                        task.status = EngineImpl.Status.DOWNLOADING;
                         message.obj = task;
                         Log.d(TAG, "STATUS_PENDING");
                         break;

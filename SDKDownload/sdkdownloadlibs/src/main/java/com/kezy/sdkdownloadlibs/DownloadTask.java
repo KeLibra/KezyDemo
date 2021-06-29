@@ -18,8 +18,6 @@ import com.kezy.sdkdownloadlibs.task.EngineImpl;
 public class DownloadTask<T extends EngineImpl> implements TaskImpl{
     public T mTaskManager;
     public DownloadInfo mDownloadInfo;
-    private Context mContext;
-
 
    public DownloadTask(T taskManager, DownloadInfo info) {
        if (taskManager == null) {
@@ -32,41 +30,31 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl{
    }
 
     public void start(Context context) {
-        mTaskManager.startDownload(context, mDownloadInfo.url);
+        mTaskManager.startDownload(context);
     }
 
-    private ServiceConnection mConn = new ServiceConnection() {
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.e("---------msg", "------ binder ---- " + service);
-        }
-    };
-    public int getStatus(String url) {
-       if (mTaskManager == null || mTaskManager.getInfo(url) == null) {
+    public int getStatus() {
+       if (mTaskManager == null) {
            return 0;
        }
-       return mTaskManager.getInfo(url).status;
+       return mTaskManager.getInfo().status;
     }
 
     @Override
     public int getDownloadType(String url) {
-        if (mTaskManager == null || mTaskManager.getInfo(url) == null) {
+        if (mTaskManager == null || mTaskManager.getInfo() == null) {
             return -1;
         }
-        return mTaskManager.getInfo(url).downloadType;
+        return mTaskManager.getInfo().downloadType;
     }
 
     @Override
     public String createDownloadKey(Context context, String downloadUrl) {
-        if (mTaskManager == null || mTaskManager.getInfo(downloadUrl) == null) {
+        if (mTaskManager == null || mTaskManager.getInfo() == null) {
             return "null";
         }
-        return mTaskManager.getInfo(downloadUrl).url + mTaskManager.getInfo(downloadUrl).adId;
+        return mTaskManager.getInfo().url + mTaskManager.getInfo().adId;
     }
 
 }

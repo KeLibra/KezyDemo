@@ -53,61 +53,61 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     @Override
-    public DownloadInfo getInfo(String url) {
-        Log.i("-------msg", " v2 manager info " + mDownloadService.getDownloadInfo(url));
-        return mDownloadService.getDownloadInfo(url);
+    public DownloadInfo getInfo() {
+        Log.i("-------msg", " v2 manager info " + mDownloadService.getDownloadInfoByUrl(mInfo.url));
+        return mDownloadService.getDownloadInfoByUrl(mInfo.url);
     }
 
     @Override
-    public long getTaskId(String downloadUrl) {
+    public long getTaskId() {
         return -1;
     }
 
     @Override
-    public void startDownload(Context context, String downloadUrl) {
-        downLoadAPK(downloadUrl);
+    public void startDownload(Context context) {
+        downLoadAPK(mInfo.url);
     }
 
     @Override
-    public void pauseDownload(Context context, String downloadUrl) {
+    public void pauseDownload(Context context) {
         if (!checkConnectionStatus(context)) {
             return;
         }
         if (mDownloadService != null) {
-            mDownloadService.pauseDownload(downloadUrl);
+            mDownloadService.pauseDownload(mInfo.url);
         }
     }
 
     @Override
-    public void continueDownload(Context context, String downloadUrl) {
+    public void continueDownload(Context context) {
 
         if (!checkConnectionStatus(context)) {
-            downLoadAPK(downloadUrl);
+            downLoadAPK(mInfo.url);
             return;
         }
         if (mDownloadService != null) {
-            mDownloadService.startDownload(downloadUrl);
+            mDownloadService.startDownload(mInfo.url);
         }
     }
 
     @Override
-    public void deleteDownload(Context context, String downloadUrl) {
+    public void deleteDownload(Context context) {
         if (!checkConnectionStatus(context)) {
             return;
         }
         if (mDownloadService != null) {
-            mDownloadService.removeDownload(downloadUrl);
+            mDownloadService.removeDownload(mInfo.url);
         }
     }
 
     @Override
-    public int getStatus(Context context, String downloadUrl) {
-        return mDownloadService.getStatueByUrl(downloadUrl);
+    public int getStatus(Context context) {
+        return mDownloadService.getStatueByUrl(mInfo.url);
     }
 
     @Override
-    public String getDownloadFile(Context context, String downloadUrl) {
-        return mDownloadService.getDownloadSavePath(downloadUrl);
+    public String getDownloadFile(Context context) {
+        return mDownloadService.getDownloadSavePath(mInfo.url);
     }
 
     @Override

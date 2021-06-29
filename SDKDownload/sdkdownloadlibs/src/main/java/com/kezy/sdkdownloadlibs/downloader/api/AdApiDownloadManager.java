@@ -53,31 +53,31 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
     }
 
     @Override
-    public DownloadInfo getInfo(String url) {
+    public DownloadInfo getInfo() {
         return mInfo;
     }
 
     @Override
-    public long getTaskId(String downloadUrl) {
+    public long getTaskId() {
 
         return mInfo.taskId;
     }
 
     @Override
-    public void startDownload(Context context, String downloadUrl) {
-        downLoadApk(context, downloadUrl, "", "");
+    public void startDownload(Context context) {
+        downLoadApk(context, mInfo.url, "", "");
     }
 
     @Override
-    public void pauseDownload(Context context, String downloadUrl) {
+    public void pauseDownload(Context context) {
     }
 
     @Override
-    public void continueDownload(Context context, String downloadUrl) {
+    public void continueDownload(Context context) {
     }
 
     @Override
-    public void deleteDownload(Context context, String downloadUrl) {
+    public void deleteDownload(Context context) {
         try {
             downloadManager.remove(mInfo.taskId);
             mInfo.status = Status.DELETE;
@@ -87,7 +87,7 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
     }
 
     @Override
-    public int getStatus(Context context, String downloadUrl) {
+    public int getStatus(Context context) {
         if (mInfo != null) {
             return mInfo.status;
         }
@@ -203,7 +203,7 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
      */
     public void clearCurrentTask(String url) {
         try {
-            downloadManager.remove(getTaskId(url));
+            downloadManager.remove(getTaskId());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -270,9 +270,9 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
      * @return file
      */
     @Override
-    public String getDownloadFile(Context context, String downloadUrl) {
-        Log.e("-------msg", " getDownloadFile = " + downloadUrl);
-        long downloadId = getTaskId(downloadUrl);
+    public String getDownloadFile(Context context) {
+        Log.e("-------msg", " getDownloadFile = ");
+        long downloadId = getTaskId();
         if (downloadId <= 0) {
             return "";
         }
@@ -351,8 +351,8 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
                 mInfo.progress = task.progress;
                 mInfo.totalSize = task.totalSize;
                 mInfo.tempSize = task.tempSize;
-                if (getDownloadFile(null, mInfo.url) != null && TextUtils.isEmpty(mInfo.path)) {
-                    mInfo.path = getDownloadFile(null, mInfo.url);
+                if (getDownloadFile(null) != null && TextUtils.isEmpty(mInfo.path)) {
+                    mInfo.path = getDownloadFile(null);
                 }
             }
         }

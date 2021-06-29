@@ -27,28 +27,28 @@ public interface EngineImpl<T> {
 
     void bindDownloadInfo(DownloadInfo info);
 
-    DownloadInfo getInfo(String url);
+    DownloadInfo getInfo();
 
     // 下载任务id
-    long getTaskId(String downloadUrl);
+    long getTaskId();
 
     // 开始下载
-    void startDownload(Context context, String downloadUrl);
+    void startDownload(Context context);
 
     //暂停下载
-    void pauseDownload(Context context, String downloadUrl);
+    void pauseDownload(Context context);
 
     // 继续下载
-    void continueDownload(Context context, String downloadUrl);
+    void continueDownload(Context context);
 
     // 删除下载
-    void deleteDownload(Context context, String downloadUrl);
+    void deleteDownload(Context context);
 
     // 获取下载状态
-    int getStatus(Context context, String downloadUrl);
+    int getStatus(Context context);
 
     // 获取下载文件路径
-    String getDownloadFile(Context context, String downloadUrl);
+    String getDownloadFile(Context context);
 
     int getDownloaderType();
 }
