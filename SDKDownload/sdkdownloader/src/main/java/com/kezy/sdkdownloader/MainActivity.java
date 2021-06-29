@@ -34,14 +34,14 @@ public class MainActivity extends AppCompatActivity {
 
         NotificationChannels.createAllNotificationChannels(MainActivity.this);
 
-//        DownloadTask task = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_35MB));
+        DownloadTask task = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_35MB));
         DownloadTask task1 = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_113MB));
 
         btnApi = findViewById(R.id.btn_api);
         btnApi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                task.start(MainActivity.this);
+                task.start(MainActivity.this);
                 task1.start(MainActivity.this);
             }
         });
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         btnXima.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Log.e("-----------msg", "  -==== 1111 " + task.getStatus(url_35MB));
+                Log.e("-----------msg", "  -==== 1111 " + task.getStatus(url_35MB));
                 Log.e("-----------msg", "  -====  22222 " + task1.getStatus(url_113MB));
 
 
