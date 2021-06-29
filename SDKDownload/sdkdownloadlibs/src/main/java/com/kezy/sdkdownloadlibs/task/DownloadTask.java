@@ -1,27 +1,22 @@
-package com.kezy.sdkdownloadlibs;
+package com.kezy.sdkdownloadlibs.task;
 
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.ServiceConnection;
-import android.os.IBinder;
-import android.util.Log;
 
-import com.kezy.sdkdownloadlibs.downloader.api.AdApiDownloadManager;
-import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.task.EngineImpl;
+import com.kezy.sdkdownloadlibs.downloader.api.ApiDownloadManager;
+import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 /**
  * @Author Kezy
  * @Time 2021/6/22
  * @Description
  */
-public class DownloadTask<T extends EngineImpl> implements TaskImpl{
+public class DownloadTask<T extends EngineImpl> implements TaskImpl {
     public T mTaskManager;
     public DownloadInfo mDownloadInfo;
 
    public DownloadTask(T taskManager, DownloadInfo info) {
        if (taskManager == null) {
-           this.mTaskManager = (T) new AdApiDownloadManager();
+           this.mTaskManager = (T) new ApiDownloadManager();
        } else {
            this.mTaskManager = taskManager;
        }
@@ -42,7 +37,7 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl{
     }
 
     @Override
-    public int getDownloadType(String url) {
+    public int getDownloadType() {
         if (mTaskManager == null || mTaskManager.getInfo() == null) {
             return -1;
         }
@@ -50,7 +45,7 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl{
     }
 
     @Override
-    public String createDownloadKey(Context context, String downloadUrl) {
+    public String createDownloadKey() {
         if (mTaskManager == null || mTaskManager.getInfo() == null) {
             return "null";
         }

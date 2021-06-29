@@ -8,6 +8,6 @@ import androidx.core.content.FileProvider;
  * @Time 2021/5/18
  * @Description
  */
-public class AdApiDownloadFileProvider extends FileProvider {
+public class ApiDownloadFileProvider extends FileProvider {
 
 }

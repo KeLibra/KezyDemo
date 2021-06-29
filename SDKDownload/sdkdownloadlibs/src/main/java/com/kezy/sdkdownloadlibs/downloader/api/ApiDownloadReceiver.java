@@ -20,7 +20,7 @@ import java.util.Objects;
  * @Description DownloadManager下载广播接收器，需要在xml中注册,
  *  * 主要实现通知栏显示下载完成自动安装，或者通知栏点击跳转到系统的下载管理器界面
  */
-public class AdApiDownloadReceiver extends BroadcastReceiver {
+public class ApiDownloadReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null) {

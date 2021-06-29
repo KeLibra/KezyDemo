@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 
 import com.kezy.notifylib.NotificationsManager;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.task.EngineImpl;
+import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 import java.io.File;
 import java.util.ArrayList;

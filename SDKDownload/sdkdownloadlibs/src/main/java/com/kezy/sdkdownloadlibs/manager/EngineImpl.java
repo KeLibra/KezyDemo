@@ -1,6 +1,8 @@
-package com.kezy.sdkdownloadlibs.task;
+package com.kezy.sdkdownloadlibs.manager;
 
 import android.content.Context;
+
+import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 
 /**
  * @Author Kezy

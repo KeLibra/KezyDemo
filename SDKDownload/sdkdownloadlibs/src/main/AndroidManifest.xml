@@ -15,7 +15,7 @@
 
     <application>
         <provider
-            android:name=".downloader.api.AdApiDownloadFileProvider"
+            android:name=".downloader.api.ApiDownloadFileProvider"
             android:authorities="${applicationId}.fileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -24,7 +24,7 @@
                 android:resource="@xml/ad_api_download_file_path" />
         </provider>
 
-        <receiver android:name=".downloader.api.AdApiDownloadReceiver">
+        <receiver android:name=".downloader.api.ApiDownloadReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
                 <action android:name="android.intent.action.DOWNLOAD_NOTIFICATION_CLICKED" />

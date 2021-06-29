@@ -22,7 +22,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.task.EngineImpl;
+import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 import java.io.File;
 import java.util.Objects;
@@ -32,7 +32,7 @@ import java.util.Objects;
  * @Time 2021/5/18
  * @Description
  */
-public class AdApiDownloadManager implements EngineImpl<Long> {
+public class ApiDownloadManager implements EngineImpl<Long> {
 
     /**
      * 系统DownloadManager
@@ -42,7 +42,7 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
     /**
      * 下载监听
      */
-    private AdApiDownloadObserver downloadObserver;
+    private ApiDownloadObserver downloadObserver;
 
     private DownloadInfo mInfo;
 
@@ -111,7 +111,7 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
                 }
                 // 获取下载管理器
                 downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-                clearCurrentTask(downloadUrl);
+                clearCurrentTask();
                 // 下载地址如果为null,抛出异常
                 Uri uri = Uri.parse(downloadUrl);
                 DownloadManager.Request request = new DownloadManager.Request(uri);
@@ -163,7 +163,7 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
                 createTask(lastDownloadId, appName);
                 // 如需要进度及下载状态，增加下载监听
                 AdApiDownloadHandler downloadHandler = new AdApiDownloadHandler();
-                downloadObserver = new AdApiDownloadObserver(downloadHandler, downloadManager, lastDownloadId);
+                downloadObserver = new ApiDownloadObserver(downloadHandler, downloadManager, lastDownloadId);
                 context.getContentResolver().registerContentObserver(Uri.parse("content://downloads/my_downloads"), true, downloadObserver);
                 Toast.makeText(context, "apk 开始下载", Toast.LENGTH_LONG).show();
             }
@@ -201,7 +201,7 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
     /**
      * 清除上一个任务，防止apk重复下载
      */
-    public void clearCurrentTask(String url) {
+    public void clearCurrentTask() {
         try {
             downloadManager.remove(getTaskId());
         } catch (Exception e) {
@@ -317,19 +317,6 @@ public class AdApiDownloadManager implements EngineImpl<Long> {
 
             return null;
         }
-    }
-
-
-    private DownloadListener mDownloadListener;
-
-    public void setDownloadListener(DownloadListener downloadListener) {
-        this.mDownloadListener = downloadListener;
-    }
-
-    public interface DownloadListener {
-        void downloadSuccess(String path);
-
-        void downloadErr();
     }
 
     public class AdApiDownloadHandler extends Handler {

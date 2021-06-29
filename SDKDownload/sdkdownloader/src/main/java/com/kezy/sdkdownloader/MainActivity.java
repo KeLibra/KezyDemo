@@ -11,8 +11,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.notifylib.NotificationChannels;
-import com.kezy.sdkdownloadlibs.DownloadTask;
-import com.kezy.sdkdownloadlibs.downloader.xima.DownloadServiceManage;
+import com.kezy.sdkdownloadlibs.task.DownloadTask;
+import com.kezy.sdkdownloadlibs.downloader.api.ApiDownloadManager;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,8 +34,11 @@ public class MainActivity extends AppCompatActivity {
 
         NotificationChannels.createAllNotificationChannels(MainActivity.this);
 
-        DownloadTask task = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_35MB));
-        DownloadTask task1 = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_113MB));
+//        DownloadTask task = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_35MB));
+//        DownloadTask task1 = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_113MB));
+
+        DownloadTask task = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_35MB));
+        DownloadTask task1 = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_113MB));
 
         btnApi = findViewById(R.id.btn_api);
         btnApi.setOnClickListener(new View.OnClickListener() {
@@ -52,9 +55,8 @@ public class MainActivity extends AppCompatActivity {
         btnXima.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("-----------msg", "  -==== 1111 " + task.getStatus(url_35MB));
-                Log.e("-----------msg", "  -====  22222 " + task1.getStatus(url_113MB));
-
+                Log.e("-----------msg", "  -==== 1111 " + task.getStatus());
+                Log.e("-----------msg", "  -====  22222 " + task1.getStatus());
 
             }
         });

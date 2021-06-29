@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.task.EngineImpl;
+import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 import java.io.BufferedInputStream;
 import java.io.File;

@@ -2,6 +2,8 @@ package com.kezy.sdkdownloadlibs.task;
 
 import android.text.TextUtils;
 
+import com.kezy.sdkdownloadlibs.manager.EngineImpl;
+
 import java.io.File;
 
 /**

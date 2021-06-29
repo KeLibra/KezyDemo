@@ -8,14 +8,14 @@ import android.os.Message;
 import android.util.Log;
 
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.task.EngineImpl;
+import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 /**
  * @Author Kezy
  * @Time 2021/5/18
  * @Description ContentObserver监听下载的进度
  */
-public class AdApiDownloadObserver extends ContentObserver {
+public class ApiDownloadObserver extends ContentObserver {
 
     private final String TAG = "-------msg" + getClass().getCanonicalName();
 
@@ -37,7 +37,7 @@ public class AdApiDownloadObserver extends ContentObserver {
      *
      * @param handler The handler to run {@link #onChange} on, or null if none.
      */
-    public AdApiDownloadObserver(Handler handler, DownloadManager downloadManager, long downloadId) {
+    public ApiDownloadObserver(Handler handler, DownloadManager downloadManager, long downloadId) {
         super(handler);
         this.handler = handler;
         this.downloadManager = downloadManager;
