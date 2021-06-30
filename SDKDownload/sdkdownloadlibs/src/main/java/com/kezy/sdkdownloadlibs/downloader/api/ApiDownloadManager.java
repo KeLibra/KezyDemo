@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
@@ -84,7 +85,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
     public void deleteDownload(Context context) {
         try {
             downloadManager.remove(mInfo.taskId);
-            mInfo.status = Status.DELETE;
+            mInfo.status = DownloadInfo.Status.DELETE;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -95,8 +96,13 @@ public class ApiDownloadManager implements EngineImpl<Long> {
         if (mInfo != null) {
             return mInfo.status;
         }
-        return Status.WAITING;
+        return DownloadInfo.Status.WAITING;
 
+    }
+
+    @Override
+    public void installApk(Context context) {
+        DownloadUtils.installApk(context, mInfo.path);
     }
 
     /**
@@ -123,7 +129,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
                 if (TextUtils.isEmpty(appName)) {
-                    appName = "应用";
+                    appName = "应用.apk";
                 } else {
                     if (!appName.contains(".apk")) {
                         appName = appName + ".apk";
@@ -166,7 +172,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                 long lastDownloadId = downloadManager.enqueue(request);
                 createTask(lastDownloadId, appName);
                 // 如需要进度及下载状态，增加下载监听
-                downloadObserver = new ApiDownloadObserver(lastDownloadId);
+                downloadObserver = new ApiDownloadObserver(context, lastDownloadId);
                 context.getContentResolver().registerContentObserver(Uri.parse("content://downloads/my_downloads"), true, downloadObserver);
                 Toast.makeText(context, "apk 开始下载", Toast.LENGTH_LONG).show();
             }
@@ -308,13 +314,16 @@ public class ApiDownloadManager implements EngineImpl<Long> {
 
         private long mDownloadId;
 
+        private Context mContext;
+
         /**
          * Creates a content observer.
          *
          */
-        public ApiDownloadObserver(long downloadId) {
+        public ApiDownloadObserver(Context context, long downloadId) {
             super(new Handler());
             this.mDownloadId = downloadId;
+            this.mContext = context;
             query = new DownloadManager.Query().setFilterById(downloadId);
         }
 
@@ -353,7 +362,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                     switch (status) {
                         case DownloadManager.STATUS_PAUSED:
                             mInfo.isRunning = false;
-                            mInfo.status = EngineImpl.Status.STOPPED;
+                            mInfo.status = DownloadInfo.Status.STOPPED;
                             if (mListener != null) {
                                 mListener.onPause(mInfo.onlyKey());
                             }
@@ -362,7 +371,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                         case DownloadManager.STATUS_PENDING:
                             // 开始下载
                             mInfo.isRunning = true;
-                            mInfo.status = Status.STARTED;
+                            mInfo.status = DownloadInfo.Status.STARTED;
                             if (mListener != null) {
                                 mListener.onStart(mInfo.onlyKey(), false);
                             }
@@ -370,7 +379,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                             break;
                         case DownloadManager.STATUS_RUNNING:
                             mInfo.isRunning = true;
-                            mInfo.status = EngineImpl.Status.DOWNLOADING;
+                            mInfo.status = DownloadInfo.Status.DOWNLOADING;
 
                             if (mListener != null) {
                                 mListener.onProgress(mInfo.onlyKey(), mInfo.progress);
@@ -381,18 +390,19 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                             if (!isEnd) {
                                 // 完成
                                 mInfo.isRunning = false;
-                                mInfo.status = EngineImpl.Status.FINISHED;
+                                mInfo.status = DownloadInfo.Status.FINISHED;
                                 if (mListener != null) {
                                     mListener.onSuccess(mInfo.onlyKey());
                                 }
                                 Log.d(TAG, "STATUS_SUCCESSFUL");
+                                installApk(mContext);
                             }
                             isEnd = true;
                             break;
                         case DownloadManager.STATUS_FAILED:
                             if (!isEnd) {
                                 mInfo.isRunning = false;
-                                mInfo.status = EngineImpl.Status.ERROR;
+                                mInfo.status = DownloadInfo.Status.ERROR;
                                 Log.d(TAG, "STATUS_FAILED");
                             }
                             isEnd = true;

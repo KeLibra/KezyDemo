@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -69,11 +68,11 @@ public class DownloadThread extends Thread{
 
             if (downloadSize == Integer.MAX_VALUE) {
                 message = Message.obtain();
-                if (mTask.status == EngineImpl.Status.DELETE) {
+                if (mTask.status == DownloadInfo.Status.DELETE) {
                     message.what = HANDLER_REMOVE;
                 } else {
                     message.what = HANDLER_PAUSE;
-                    mTask.status = EngineImpl.Status.STOPPED;
+                    mTask.status = DownloadInfo.Status.STOPPED;
                 }
                 message.obj = mTask;
 
@@ -81,13 +80,13 @@ public class DownloadThread extends Thread{
                 // 下载成功
                 message = Message.obtain();
                 message.what = DOWN_OK;
-                mTask.status = EngineImpl.Status.FINISHED;
+                mTask.status = DownloadInfo.Status.FINISHED;
                 mTask.path = mTask.getFilePath();
                 message.obj = mTask;
 
                 Log.e("----------msg", " ------- 下载完成 ---- downloadSize " + downloadSize);
             } else {
-                mTask.status = EngineImpl.Status.ERROR;
+                mTask.status = DownloadInfo.Status.ERROR;
                 message = Message.obtain();
                 message.what = DOWN_ERROR;
                 message.obj = mTask;
@@ -96,12 +95,12 @@ public class DownloadThread extends Thread{
         } catch (SocketTimeoutException e) {
             message = Message.obtain();
             message.what =  REQUEST_TIME_OUT;
-            mTask.status = EngineImpl.Status.ERROR;
+            mTask.status = DownloadInfo.Status.ERROR;
             message.obj = mTask;
         } catch (IOException e) {
             message = Message.obtain();
             message.what = DOWN_ERROR;
-            mTask.status = EngineImpl.Status.ERROR;
+            mTask.status = DownloadInfo.Status.ERROR;
             message.obj = mTask;
         } finally {
             Log.d("-----msg mydownload", mTask.retryCount + " --- :finally -- " + (message == null ? "null" : message.what));
@@ -130,7 +129,7 @@ public class DownloadThread extends Thread{
             return Integer.MAX_VALUE;
         }
 
-        task.status = EngineImpl.Status.DOWNLOADING;
+        task.status = DownloadInfo.Status.DOWNLOADING;
 
         boolean isRestart = task.tempSize != 0;
         if (task.retryCount == 0) {
@@ -138,7 +137,7 @@ public class DownloadThread extends Thread{
             if (handler != null) {
                Message message = Message.obtain();
                message.what = DOWN_START;
-               task.status = EngineImpl.Status.STARTED;
+               task.status = DownloadInfo.Status.STARTED;
                message.obj = task;
                handler.sendMessage(message);
             }
@@ -274,7 +273,7 @@ public class DownloadThread extends Thread{
                             if (handler != null) {
                                 Message message = Message.obtain();
                                 message.what = DOWNLOAD_ING;
-                                task.status = EngineImpl.Status.DOWNLOADING;
+                                task.status = DownloadInfo.Status.DOWNLOADING;
                                 message.obj = task;
                                 handler.sendMessage(message);
                             }
@@ -292,14 +291,18 @@ public class DownloadThread extends Thread{
             }
 
             if (!task.isRunning) {
-                if (task.status != EngineImpl.Status.DELETE) {
+                if (task.status != DownloadInfo.Status.DELETE) {
                     task.status = 0;
                 }
                 return Integer.MAX_VALUE;
             }
             // 如果下载完成
             if (task.totalSize == task.tempSize || task.totalSize == 0) {
-                file.renameTo(new File(task.path, task.name + ".apk"));
+                if (!TextUtils.isEmpty(task.name) && (task.name.endsWith(".apk") || task.name.endsWith(".APK"))) {
+                    file.renameTo(new File(task.path, task.name));
+                } else {
+                    file.renameTo(new File(task.path, task.name + ".apk"));
+                }
                 Log.e("---------msg", " ---- 下载完成 file ------ " + file.getPath());
                 downloadedLength = task.tempSize;
                 task.tempSize = 0;
@@ -319,8 +322,6 @@ public class DownloadThread extends Thread{
                         }
                     }
                 }
-//                startDownload(task.url);
-                // TODO: 2021/6/22 start download
                 return Integer.MAX_VALUE;
             }
         } catch (Exception e) {

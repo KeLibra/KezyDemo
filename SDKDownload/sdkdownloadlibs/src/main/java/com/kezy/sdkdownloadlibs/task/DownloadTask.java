@@ -2,6 +2,7 @@ package com.kezy.sdkdownloadlibs.task;
 
 import android.content.Context;
 
+import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.downloader.api.ApiDownloadManager;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
@@ -31,9 +32,34 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl {
    }
 
     public void start(Context context) {
-        mTaskManager.startDownload(context);
+        if (mTaskManager!= null) {
+            mTaskManager.startDownload(context);
+        }
     }
 
+    public void pause(Context context) {
+        if (mTaskManager!= null) {
+            mTaskManager.pauseDownload(context);
+        }
+    }
+
+    public void reStart(Context context){
+        if (mTaskManager!= null) {
+            mTaskManager.continueDownload(context);
+        }
+    }
+
+    public void remove(Context context) {
+        if (mTaskManager!= null) {
+            mTaskManager.deleteDownload(context);
+        }
+    }
+
+    public void install(Context context) {
+        if (mTaskManager != null) {
+            mTaskManager.installApk(context);
+        }
+    }
 
     public int getStatus() {
        if (mTaskManager == null) {

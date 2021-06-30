@@ -68,6 +68,9 @@ public class DownloadUtils {
             return;
         }
         File file = new File(path);
+        if (!file.exists()) {
+            return;
+        }
         String fileName = file.getName().toUpperCase();
         if (TextUtils.isEmpty(fileName) || !fileName.endsWith(".APK")) {
             return;

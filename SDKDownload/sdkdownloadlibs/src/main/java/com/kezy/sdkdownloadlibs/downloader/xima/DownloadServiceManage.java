@@ -10,6 +10,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
@@ -118,6 +119,13 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     @Override
+    public void installApk(Context context) {
+        if (mDownloadService != null) {
+            DownloadUtils.installApk(mContext, mDownloadService.getDownloadSavePath(mInfo.url));
+        }
+    }
+
+    @Override
     public String getDownloadFile(Context context) {
         return mDownloadService.getDownloadSavePath(mInfo.url);
     }
@@ -179,16 +187,13 @@ public class DownloadServiceManage implements EngineImpl<String> {
         return true;
     }
 
-
-    private void onServiceConnectedCallBack() {
-    }
     public int getStatueByUrl(String url) {
 
         if (mDownloadService != null) {
             return mDownloadService.getStatueByUrl(url);
         }
 
-        return Status.WAITING;
+        return DownloadInfo.Status.WAITING;
     }
 
     @Nullable
@@ -273,6 +278,4 @@ public class DownloadServiceManage implements EngineImpl<String> {
         }
         mContext.startService(intent);
     }
-
-
 }

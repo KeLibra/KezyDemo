@@ -40,9 +40,6 @@ public class DownloadService extends Service {
     public static final String DOWNLOAD_APK_URL = "download_apk_url";
     public static final String DOWNLOAD_APK_NAME = "download_apk_name";
 
-    // 通知栏点击行动
-    private static final String DOWNLOADURL = "downloadUrl";
-
     /**
      * @Fields mDownloadTaskList : 正在下载的任务
      */
@@ -115,22 +112,22 @@ public class DownloadService extends Service {
         if (info != null) {
             for (DownloadInfo dt : mDownloadTaskList) {
                 if (info.equals(dt)) {
-                    if (dt.status == EngineImpl.Status.WAITING) {
+                    if (dt.status == DownloadInfo.Status.WAITING) {
                         startDownload(dt.url);
                     }
                     if (isDowning(dt.url)) {
                         // 如果是重新下载，触发一下 下载开始回调
                         handleStart(dt, true);
                     }
-                    if (dt.status == EngineImpl.Status.ERROR) {
+                    if (dt.status == DownloadInfo.Status.ERROR) {
                         DownloadThread thread = new DownloadThread(getApplicationContext(), dt, mHandler);
                         dt.retryCount = 0;
                         thread.start();
                     }
-                    if (dt.status == EngineImpl.Status.STOPPED) {
+                    if (dt.status == DownloadInfo.Status.STOPPED) {
                         startDownload(dt.url);
                     }
-                    if (dt.status == EngineImpl.Status.FINISHED) {
+                    if (dt.status == DownloadInfo.Status.FINISHED) {
                         File file = new File(dt.path);
                         if (file == null || !file.exists()) {
                             Log.i("-------msg", "------- 已下载完成过了，但是apk被删除了，需要重新下载 ");
@@ -174,7 +171,7 @@ public class DownloadService extends Service {
 
     public boolean isDowning(String url) {
         if (getDownloadInfoByUrl(url) != null) {
-            if (getDownloadInfoByUrl(url).status == EngineImpl.Status.DOWNLOADING) {
+            if (getDownloadInfoByUrl(url).status == DownloadInfo.Status.DOWNLOADING) {
                 return true;
             }
         }
@@ -188,8 +185,8 @@ public class DownloadService extends Service {
         }
         getDownloadInfoByUrl(url).isRunning = true;
         Log.e("-------msg", "startDownload  --- task.isRunning = " + getDownloadInfoByUrl(url).isRunning);
-        if (getDownloadInfoByUrl(url).status != EngineImpl.Status.DOWNLOADING) {
-            getDownloadInfoByUrl(url).status = EngineImpl.Status.DOWNLOADING;
+        if (getDownloadInfoByUrl(url).status != DownloadInfo.Status.DOWNLOADING) {
+            getDownloadInfoByUrl(url).status = DownloadInfo.Status.DOWNLOADING;
             DownloadThread thread = new DownloadThread(getApplicationContext(), getDownloadInfoByUrl(url), mHandler);
             getDownloadInfoByUrl(url).retryCount = 0;
             getDownloadInfoByUrl(url).isRunning = true;
@@ -200,15 +197,15 @@ public class DownloadService extends Service {
     public void pauseDownload(String url) {
         if (getDownloadInfoByUrl(url) != null && getDownloadInfoByUrl(url).isRunning) {
             getDownloadInfoByUrl(url).isRunning = false;
-            getDownloadInfoByUrl(url).status = EngineImpl.Status.STOPPED;
+            getDownloadInfoByUrl(url).status = DownloadInfo.Status.STOPPED;
         }
     }
 
     public void removeDownload(String url) {
         if (getDownloadInfoByUrl(url) != null) {
-            getDownloadInfoByUrl(url).status = EngineImpl.Status.DELETE;
+            getDownloadInfoByUrl(url).status = DownloadInfo.Status.DELETE;
             getDownloadInfoByUrl(url).isRunning = false;
-            String filePath = getDownloadInfoByUrl(url).getFilePath();
+            String filePath = getDownloadInfoByUrl(url).path;
             if (filePath != null && new File(filePath).exists()) {
                 new File(filePath).delete();
             }
@@ -234,13 +231,13 @@ public class DownloadService extends Service {
         if (getDownloadInfoByUrl(url) != null) {
             return getDownloadInfoByUrl(url).status;
         }
-        return EngineImpl.Status.WAITING;
+        return DownloadInfo.Status.WAITING;
     }
 
     @Nullable
     public String getDownloadSavePath(String url) {
         if (getDownloadInfoByUrl(url) != null) {
-            return getDownloadInfoByUrl(url).getFilePath();
+            return getDownloadInfoByUrl(url).path;
         }
         return null;
     }

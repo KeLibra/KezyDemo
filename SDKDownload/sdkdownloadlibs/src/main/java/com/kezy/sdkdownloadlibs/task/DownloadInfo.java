@@ -14,6 +14,16 @@ import java.io.File;
  */
 public class DownloadInfo {
 
+    public interface Status {
+        int WAITING = 0;     //等待, 没有下载
+        int STARTED = 1;     //开始
+        int DOWNLOADING = 2; // 正在下载
+        int FINISHED = 3;    //完成
+        int STOPPED = 4;     //暂停
+        int ERROR = 5;       //错误
+        int DELETE = 6;      // 删除
+    }
+
     public long timeId; // time戳
     public long taskId; // 任务id
     public long adId; // 对应广告ID
@@ -26,7 +36,7 @@ public class DownloadInfo {
 
     public int progress; // 进度
 
-    public int status = EngineImpl.Status.WAITING;
+    public int status = Status.WAITING;
 
     public double speed; // 速度
 
@@ -54,7 +64,7 @@ public class DownloadInfo {
                  * .append(Environment.getExternalStorageDirectory())
                  * .append(File.separator)
                  */
-                .append(path).append(File.separator).append(name).append(".apk").toString();
+                .append(path).append(File.separator).append(name).toString();
     }
 
     public String onlyKey() {
