@@ -1,6 +1,7 @@
 package com.kezy.sdkdownloadlibs.task;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
@@ -56,6 +57,10 @@ public class DownloadInfo {
                 .append(path).append(File.separator).append(name).append(".apk").toString();
     }
 
+    public String onlyKey() {
+        Log.e("--------msg", " -----get only key =  " + url + "_" + adId + "_" + downloadType);
+        return url + "_" + adId + "_" + downloadType;
+    }
 
     @Override
     public int hashCode() {
@@ -70,7 +75,7 @@ public class DownloadInfo {
         if (obj != null && obj instanceof DownloadInfo) {
             DownloadInfo other = (DownloadInfo) obj;
             // adid 相同 并且 下载url 相同，则认为是同一个task
-                return TextUtils.equals(this.url, other.url) && this.adId == other.adId;
+            return TextUtils.equals(this.onlyKey(), other.onlyKey());
         }
         return false;
     }

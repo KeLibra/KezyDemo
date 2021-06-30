@@ -15,12 +15,14 @@ import androidx.annotation.Nullable;
 
 import com.kezy.notifylib.NotificationsManager;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
+import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @Author Kezy
@@ -39,11 +41,7 @@ public class DownloadService extends Service {
     public static final String DOWNLOAD_APK_NAME = "download_apk_name";
 
     // 通知栏点击行动
-    private static final String ACTION = "actionName";
     private static final String DOWNLOADURL = "downloadUrl";
-    private static final String PAUSE_ACTION = "pauseAction";
-    private static final String CANCLE_ACTION = "cancleAction";
-    private static final String RESUME_ACTION = "resumeAction";
 
     /**
      * @Fields mDownloadTaskList : 正在下载的任务
@@ -75,6 +73,26 @@ public class DownloadService extends Service {
         return mBinder;
     }
 
+    private List<DownloadStatusChangeListener> mDownloadServiceStatueListeners = new CopyOnWriteArrayList<>();
+
+    public void addDownloadStatueListener(DownloadStatusChangeListener mListener) {
+        if (!mDownloadServiceStatueListeners.contains(mListener)) {
+            mDownloadServiceStatueListeners.add(mListener);
+        }
+    }
+
+    public void removeDownloadStatueListener(DownloadStatusChangeListener l) {
+        if (mDownloadServiceStatueListeners != null) {
+            mDownloadServiceStatueListeners.remove(l);
+        }
+    }
+
+    public void removeAllListener() {
+        if (mDownloadServiceStatueListeners != null) {
+            mDownloadServiceStatueListeners.clear();
+        }
+    }
+
     public class Binder extends android.os.Binder {
         public DownloadService getService() {
             return DownloadService.this;
@@ -92,21 +110,6 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && intent.hasExtra(ACTION)) {
-            String action = intent.getStringExtra(ACTION);
-            String downloadUrl = intent.getStringExtra(DOWNLOADURL);
-
-            Log.d(TAG, "onStartCommand " + action);
-
-            if (PAUSE_ACTION.equals(action)) {
-                pauseDownload(downloadUrl);
-            } else if (CANCLE_ACTION.equals(action)) {
-                removeDownload(downloadUrl);
-            } else if (RESUME_ACTION.equals(action)) {
-                startDownload(downloadUrl);
-            }
-            return super.onStartCommand(intent, flags, startId);
-        }
 
         DownloadInfo info =  initDownloadTask(intent);
         if (info != null) {
@@ -117,7 +120,7 @@ public class DownloadService extends Service {
                     }
                     if (isDowning(dt.url)) {
                         // 如果是重新下载，触发一下 下载开始回调
-                        handleStart(dt.url, true);
+                        handleStart(dt, true);
                     }
                     if (dt.status == EngineImpl.Status.ERROR) {
                         DownloadThread thread = new DownloadThread(getApplicationContext(), dt, mHandler);
@@ -218,13 +221,7 @@ public class DownloadService extends Service {
 
 
 
-    private void handleStart(String url, boolean isRestart) {
-//        for (IDownloadServiceStatueListener l : mDownloadServiceStatueListeners) {
-//            l.onStartCallBack(url, isRestart);
-//        }
 
-        Log.d(TAG, "handleStart   " + url);
-    }
 
     private File getTempDownloadPath(DownloadInfo task) {
         if (task != null) {
@@ -250,8 +247,9 @@ public class DownloadService extends Service {
 
     public static final int DOWN_OK = 1001;
     public static final int DOWN_ERROR = 1002;
-    public static final int DOWNLOAD_ING = 1003;
-    public static final int REQUEST_TIME_OUT = 1004;
+    public static final int DOWN_START = 1003;
+    public static final int DOWNLOAD_ING = 1004;
+    public static final int REQUEST_TIME_OUT = 1005;
     public static final int HANDLER_PAUSE = 1006;
     public static final int HANDLER_REMOVE = 1007;
 
@@ -285,27 +283,83 @@ public class DownloadService extends Service {
                     Log.e("----------msg", " ------- 下载完成22 ----fileName   " + task.path);
                     NotificationsManager.getInstance().clearNotificationById(mNotifyManager, (int) task.timeId);
                     DownloadUtils.installApk(mContext, task.path);
+                    handleDownloadSuccess(getDownloadInfoByUrl(task.url));
                     break;
 
+                case DOWN_START:
+                    Log.e("----------msg", " ------- err ----   ");
+                    handleStart(getDownloadInfoByUrl(task.url), task.tempSize == 0);
+                    break;
                 case DOWN_ERROR:
                     Log.e("----------msg", " ------- err ----   ");
+                    handleError(getDownloadInfoByUrl(task.url));
                     break;
                 case DOWNLOAD_ING:
                     Log.e("----------msg", " ------- ing ----   " + task.progress);
                     NotificationsManager.getInstance().sendProgressViewNotification(mContext, mNotifyManager, task.progress, task.timeId);
+                    handleProgress(getDownloadInfoByUrl(task.url));
                     break;
                 case REQUEST_TIME_OUT:
                     Log.e("----------msg", " ------- REQUEST_TIME_OUT ----   ");
+                    handleError(getDownloadInfoByUrl(task.url));
                     break;
                 case HANDLER_PAUSE:
                     Log.e("----------msg", " ------- HANDLER_PAUSE ----   ");
+                    handlePause(getDownloadInfoByUrl(task.url));
                     break;
                 case HANDLER_REMOVE:
                     Log.e("----------msg", " ------- HANDLER_REMOVE ----   ");
+                    handleRemove(getDownloadInfoByUrl(task.url));
                     break;
                 default:
                     break;
             }
         }
+    }
+
+    private void handleRemove(DownloadInfo info) {
+        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+            l.onRemove(info.onlyKey());
+        }
+
+        Log.d(TAG, "handleRemove   " + info);
+    }
+
+    private void handlePause(DownloadInfo info) {
+        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+            l.onPause(info.onlyKey());
+        }
+
+        Log.d(TAG, "handlePause   " + info);
+    }
+
+    private void handleProgress(DownloadInfo info) {
+        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+            l.onProgress(info.onlyKey(), info.progress);
+        }
+
+        Log.d(TAG, "handleProgress   " + info);
+    }
+
+    private void handleError(DownloadInfo info) {
+        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+            l.onError(info.onlyKey());
+        }
+        Log.d(TAG, "handleError   " + info);
+    }
+
+    private void handleDownloadSuccess(DownloadInfo info) {
+        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+            l.onSuccess(info.onlyKey());
+        }
+        Log.d(TAG, "handleDownloadSuccess   " + info);
+    }
+
+    private void handleStart(DownloadInfo info, boolean isRestart) {
+        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+            l.onStart(info.onlyKey(), isRestart);
+        }
+
+        Log.d(TAG, "handleStart   " + info);
     }
 }

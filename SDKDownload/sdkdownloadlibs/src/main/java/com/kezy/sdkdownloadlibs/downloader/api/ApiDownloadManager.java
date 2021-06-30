@@ -3,7 +3,6 @@ package com.kezy.sdkdownloadlibs.downloader.api;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -12,16 +11,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.content.FileProvider;
 
+import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
@@ -47,10 +43,17 @@ public class ApiDownloadManager implements EngineImpl<Long> {
 
     private DownloadInfo mInfo;
 
+    private DownloadStatusChangeListener mListener;
+
 
     @Override
     public void bindDownloadInfo(DownloadInfo info) {
         mInfo = info;
+    }
+
+    @Override
+    public void bindStatusChangeListener(DownloadStatusChangeListener listener) {
+        mListener = listener;
     }
 
     @Override
@@ -267,6 +270,11 @@ public class ApiDownloadManager implements EngineImpl<Long> {
         return DownloadType.TYPE_API;
     }
 
+    @Override
+    public void destroy() {
+
+    }
+
     @Nullable
     public String getDiskCachePath(Context context) {
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
@@ -346,18 +354,27 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                         case DownloadManager.STATUS_PAUSED:
                             mInfo.isRunning = false;
                             mInfo.status = EngineImpl.Status.STOPPED;
+                            if (mListener != null) {
+                                mListener.onPause(mInfo.onlyKey());
+                            }
                             Log.d(TAG, "STATUS_PAUSED");
                             break;
                         case DownloadManager.STATUS_PENDING:
                             // 开始下载
                             mInfo.isRunning = true;
                             mInfo.status = Status.STARTED;
+                            if (mListener != null) {
+                                mListener.onStart(mInfo.onlyKey(), false);
+                            }
                             Log.d(TAG, "STATUS_PENDING");
                             break;
                         case DownloadManager.STATUS_RUNNING:
                             mInfo.isRunning = true;
                             mInfo.status = EngineImpl.Status.DOWNLOADING;
 
+                            if (mListener != null) {
+                                mListener.onProgress(mInfo.onlyKey(), mInfo.progress);
+                            }
                             Log.d(TAG, "STATUS_RUNNING");
                             break;
                         case DownloadManager.STATUS_SUCCESSFUL:
@@ -365,6 +382,9 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                                 // 完成
                                 mInfo.isRunning = false;
                                 mInfo.status = EngineImpl.Status.FINISHED;
+                                if (mListener != null) {
+                                    mListener.onSuccess(mInfo.onlyKey());
+                                }
                                 Log.d(TAG, "STATUS_SUCCESSFUL");
                             }
                             isEnd = true;

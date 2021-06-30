@@ -10,6 +10,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
@@ -40,6 +41,8 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     private DownloadInfo mInfo;
 
+    private DownloadStatusChangeListener mListener;
+
 
     @Override
     public void bindDownloadInfo(DownloadInfo info) {
@@ -49,6 +52,15 @@ public class DownloadServiceManage implements EngineImpl<String> {
             mDownloadService.setDownloadInfo(info);
         } else {
             mInfo = info;
+        }
+    }
+
+    @Override
+    public void bindStatusChangeListener(DownloadStatusChangeListener listener) {
+        if (mDownloadService != null) {
+            mDownloadService.addDownloadStatueListener(listener);
+        } else {
+            mListener = listener;
         }
     }
 
@@ -115,6 +127,12 @@ public class DownloadServiceManage implements EngineImpl<String> {
         return DownloadType.TYPE_XIMA;
     }
 
+    @Override
+    public void destroy() {
+        mDownloadService.removeAllListener();
+        mDownloadService.unbindService(mConn);
+    }
+
     public void init(Context context) {
         if (context == null) {
             return;
@@ -148,6 +166,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
                 mConnected = true;
                 mDownloadService = ((DownloadService.Binder) service).getService();
                 mDownloadService.setDownloadInfo(mInfo);
+                mDownloadService.addDownloadStatueListener(mListener);
             }
         }
     };

@@ -3,6 +3,7 @@ package com.kezy.sdkdownloadlibs.task;
 import android.content.Context;
 
 import com.kezy.sdkdownloadlibs.downloader.api.ApiDownloadManager;
+import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 /**
@@ -14,7 +15,11 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl {
     public T mTaskManager;
     public DownloadInfo mDownloadInfo;
 
-   public DownloadTask(T taskManager, DownloadInfo info) {
+    public void setDownloadStatusListener(DownloadStatusChangeListener statusListener) {
+        mTaskManager.bindStatusChangeListener(statusListener);
+    }
+
+    public DownloadTask(T taskManager, DownloadInfo info) {
        if (taskManager == null) {
            this.mTaskManager = (T) new ApiDownloadManager();
        } else {
@@ -22,6 +27,7 @@ public class DownloadTask<T extends EngineImpl> implements TaskImpl {
        }
        this.mDownloadInfo = info;
        mTaskManager.bindDownloadInfo(info);
+
    }
 
     public void start(Context context) {

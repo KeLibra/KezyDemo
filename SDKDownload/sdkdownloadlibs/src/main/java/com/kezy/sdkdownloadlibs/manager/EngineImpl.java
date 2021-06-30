@@ -2,6 +2,7 @@ package com.kezy.sdkdownloadlibs.manager;
 
 import android.content.Context;
 
+import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 
 /**
@@ -29,6 +30,8 @@ public interface EngineImpl<T> {
 
     void bindDownloadInfo(DownloadInfo info);
 
+    void bindStatusChangeListener(DownloadStatusChangeListener listener);
+
     DownloadInfo getInfo();
 
     // 下载任务id
@@ -53,4 +56,6 @@ public interface EngineImpl<T> {
     String getDownloadFile(Context context);
 
     int getDownloaderType();
+
+    void destroy();
 }

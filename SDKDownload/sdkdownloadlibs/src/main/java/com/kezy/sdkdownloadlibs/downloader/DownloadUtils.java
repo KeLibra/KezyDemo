@@ -1,6 +1,5 @@
 package com.kezy.sdkdownloadlibs.downloader;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,13 +8,10 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 
-import com.kezy.sdkdownloadlibs.downloader.xima.DownloadService;
 
 import java.io.File;
-import java.util.logging.Logger;
 
 /**
  * @Author Kezy

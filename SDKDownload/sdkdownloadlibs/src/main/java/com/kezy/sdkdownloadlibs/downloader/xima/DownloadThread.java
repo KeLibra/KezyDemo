@@ -27,11 +27,11 @@ import java.net.URLDecoder;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_ING;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWN_ERROR;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWN_OK;
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWN_START;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.HANDLER_PAUSE;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.HANDLER_REMOVE;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.REQUEST_TIME_OUT;
 
-;
 
 
 /**
@@ -137,7 +137,7 @@ public class DownloadThread extends Thread{
             // TODO: 2021/6/22 handle start (isRestart)
             if (handler != null) {
                Message message = Message.obtain();
-               message.what = DOWNLOAD_ING;
+               message.what = DOWN_START;
                task.status = EngineImpl.Status.STARTED;
                message.obj = task;
                handler.sendMessage(message);
