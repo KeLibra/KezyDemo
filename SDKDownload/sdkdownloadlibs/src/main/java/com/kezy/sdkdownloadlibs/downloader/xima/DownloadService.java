@@ -17,7 +17,6 @@ import com.kezy.notifylib.NotificationsManager;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -160,7 +159,7 @@ public class DownloadService extends Service {
                     info = getDownloadInfoByUrl(mDownloadUrl);
                 } else {
                     String mFileName = intent.getStringExtra(DOWNLOAD_APK_NAME);
-                    info = new DownloadInfo(mDownloadUrl);
+                    info = new DownloadInfo.Builder(mDownloadUrl).build();
                     info.name = mFileName;
                 }
                 return info;
@@ -215,10 +214,6 @@ public class DownloadService extends Service {
             }
         }
     }
-
-
-
-
 
     private File getTempDownloadPath(DownloadInfo task) {
         if (task != null) {

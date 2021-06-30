@@ -1,5 +1,6 @@
 package com.kezy.sdkdownloader;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,14 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.notifylib.NotificationChannels;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
-import com.kezy.sdkdownloadlibs.downloader.api.ApiDownloadManager;
 import com.kezy.sdkdownloadlibs.downloader.xima.DownloadServiceManage;
+import com.kezy.sdkdownloadlibs.impls.TaskImpl;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
-import com.kezy.sdkdownloadlibs.manager.EngineImpl;
-import com.kezy.sdkdownloadlibs.task.DownloadTask;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-
-import static com.kezy.sdkdownloadlibs.manager.EngineImpl.*;
+import com.kezy.sdkdownloadlibs.task.TaskManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,8 +46,12 @@ public class MainActivity extends AppCompatActivity {
 //        DownloadTask task = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_35MB));
 //        DownloadTask task1 = new DownloadTask(new DownloadServiceManage(MainActivity.this), new DownloadInfo(url_113MB));
 
-        DownloadTask task = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_35MB));
+//        DownloadTask task = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_35MB));
 //        DownloadTask task1 = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_113MB));
+
+
+        TaskImpl task = TaskManager.getInstance().createDownloadTask(new DownloadServiceManage(MainActivity.this),
+                new DownloadInfo.Builder(url_35MB).build());
 
         btnApi = findViewById(R.id.btn_api);
         btnApi.setOnClickListener(new View.OnClickListener() {
@@ -69,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("-----------msg", "  -==== 1111 " + task.getStatus());
 //                Log.e("-----------msg", "  -====  22222 " + task1.getStatus());
 
-                DownloadUtils.installApk(MainActivity.this, task.mDownloadInfo.path);
+                DownloadUtils.installApk(MainActivity.this, task.getInfo().path);
             }
         });
 
@@ -77,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         btnDownload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int status = task.mDownloadInfo.status;
+                int status = task.getStatus();
                 switch (status) {
                     case DownloadInfo.Status.WAITING:
                         task.start(MainActivity.this);

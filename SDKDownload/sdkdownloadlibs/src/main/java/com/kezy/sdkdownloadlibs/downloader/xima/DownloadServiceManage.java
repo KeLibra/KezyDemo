@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.manager.EngineImpl;
+import com.kezy.sdkdownloadlibs.impls.EngineImpl;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -32,11 +32,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     private Context mContext;
 
-    public DownloadServiceManage(Context context) {
-        mContext = context.getApplicationContext();
-        init(context);
-    }
-
     @Nullable
     private DownloadService mDownloadService;
 
@@ -44,6 +39,19 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     private DownloadStatusChangeListener mListener;
 
+
+    public DownloadServiceManage(Context context) {
+        mContext = context.getApplicationContext();
+        init(context);
+    }
+
+    public void init(Context context) {
+        if (context == null) {
+            return;
+        }
+        Log.e("----------", " -------- init ");
+        context.bindService(new Intent(context, DownloadService.class), mConn, Context.BIND_AUTO_CREATE);
+    }
 
     @Override
     public void bindDownloadInfo(DownloadInfo info) {
@@ -67,6 +75,10 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public DownloadInfo getInfo() {
+        if (mDownloadService == null) {
+            Log.i("-------msg", " v2 manager info " + mInfo);
+            return mInfo;
+        }
         Log.i("-------msg", " v2 manager info " + mDownloadService.getDownloadInfoByUrl(mInfo.url));
         return mDownloadService.getDownloadInfoByUrl(mInfo.url);
     }
@@ -115,6 +127,9 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public int getStatus(Context context) {
+        if (mDownloadService == null) {
+            return mInfo.status;
+        }
         return mDownloadService.getStatueByUrl(mInfo.url);
     }
 
@@ -127,6 +142,9 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public String getDownloadFile(Context context) {
+        if (mDownloadService == null) {
+            return mInfo.path;
+        }
         return mDownloadService.getDownloadSavePath(mInfo.url);
     }
 
@@ -137,16 +155,10 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public void destroy() {
-        mDownloadService.removeAllListener();
-        mDownloadService.unbindService(mConn);
-    }
-
-    public void init(Context context) {
-        if (context == null) {
-            return;
+        if (mDownloadService != null) {
+            mDownloadService.removeAllListener();
+            mDownloadService.unbindService(mConn);
         }
-        Log.e("----------", " -------- init ");
-        context.bindService(new Intent(context, DownloadService.class), mConn, Context.BIND_AUTO_CREATE);
     }
 
 

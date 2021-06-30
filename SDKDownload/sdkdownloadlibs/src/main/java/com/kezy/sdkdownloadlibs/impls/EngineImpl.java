@@ -1,4 +1,4 @@
-package com.kezy.sdkdownloadlibs.manager;
+package com.kezy.sdkdownloadlibs.impls;
 
 import android.content.Context;
 
@@ -15,7 +15,6 @@ public interface EngineImpl<T> {
     class DownloadType {
         public static int TYPE_API = 100; // api下载
         public static int TYPE_XIMA = 101; // 喜马下载
-
     }
 
     void bindDownloadInfo(DownloadInfo info);

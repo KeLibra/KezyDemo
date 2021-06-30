@@ -18,9 +18,9 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
+import com.kezy.sdkdownloadlibs.impls.EngineImpl;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
-import com.kezy.sdkdownloadlibs.manager.EngineImpl;
 
 import java.io.File;
 import java.util.Objects;
