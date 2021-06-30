@@ -1,6 +1,5 @@
 package com.kezy.sdkdownloader;
 
-import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.notifylib.NotificationChannels;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
-import com.kezy.sdkdownloadlibs.downloader.xima.DownloadServiceManage;
 import com.kezy.sdkdownloadlibs.impls.TaskImpl;
 import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
@@ -50,8 +48,11 @@ public class MainActivity extends AppCompatActivity {
 //        DownloadTask task1 = new DownloadTask(new ApiDownloadManager(), new DownloadInfo(url_113MB));
 
 
-        TaskImpl task = TaskManager.getInstance().createDownloadTask(new DownloadServiceManage(MainActivity.this),
-                new DownloadInfo.Builder(url_35MB).build());
+        TaskImpl task = TaskManager.getInstance().createDownloadTask(MainActivity.this,
+                new DownloadInfo
+                        .Builder(url_35MB, 0)
+                        .setDownloaderType(DownloadInfo.DownloadTpye.XIMA)
+                        .build());
 
         btnApi = findViewById(R.id.btn_api);
         btnApi.setOnClickListener(new View.OnClickListener() {

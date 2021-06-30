@@ -38,6 +38,8 @@ public class DownloadService extends Service {
 
     public static final String DOWNLOAD_APK_URL = "download_apk_url";
     public static final String DOWNLOAD_APK_NAME = "download_apk_name";
+    public static final String DOWNLOAD_APK_AD_ID = "download_apk_ad_id";
+
 
     /**
      * @Fields mDownloadTaskList : 正在下载的任务
@@ -159,7 +161,8 @@ public class DownloadService extends Service {
                     info = getDownloadInfoByUrl(mDownloadUrl);
                 } else {
                     String mFileName = intent.getStringExtra(DOWNLOAD_APK_NAME);
-                    info = new DownloadInfo.Builder(mDownloadUrl).build();
+                    long adId = intent.getLongExtra(DOWNLOAD_APK_AD_ID, 0);
+                    info = new DownloadInfo.Builder(mDownloadUrl, adId).build();
                     info.name = mFileName;
                 }
                 return info;

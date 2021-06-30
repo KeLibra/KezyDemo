@@ -6,6 +6,8 @@ import android.text.TextUtils;
 import android.util.Log;
 
 
+import com.kezy.sdkdownloadlibs.impls.EngineImpl;
+
 import java.io.File;
 
 /**
@@ -23,6 +25,11 @@ public class DownloadInfo implements Parcelable {
         int STOPPED = 4;     //暂停
         int ERROR = 5;       //错误
         int DELETE = 6;      // 删除
+    }
+
+    public interface DownloadTpye{
+        int XIMA = EngineImpl.DownloadType.TYPE_XIMA;
+        int API = EngineImpl.DownloadType.TYPE_API;
     }
 
     // 自动生成的信息
@@ -66,21 +73,18 @@ public class DownloadInfo implements Parcelable {
 
     // apk 下载的关键信息
     public static class Builder {
-        public String url; // 下载url
-        public long adId; // 对应广告ID
-        public String name; // apk name
-        public String desc; // apk desc
-        public String icon; // apk icon url
-        public int downloadType; // 下载器类型
+
+        private String url; // 下载url
+        private long adId; // 对应广告ID
+        private String name; // apk name
+        private String desc; // apk desc
+        private String icon; // apk icon url
+        private int downloadType; // 下载器类型
 
 
-        public Builder(String url) {
+        public Builder(String url, long adId) {
             this.url = url;
-        }
-
-        public Builder setAdId(long adId) {
             this.adId = adId;
-            return this;
         }
 
         public Builder setName(String name) {

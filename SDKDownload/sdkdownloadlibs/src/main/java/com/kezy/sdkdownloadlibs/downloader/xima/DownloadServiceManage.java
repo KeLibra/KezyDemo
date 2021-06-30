@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 
+import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_APK_AD_ID;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_APK_NAME;
 import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_APK_URL;
 
@@ -41,8 +42,10 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
 
     public DownloadServiceManage(Context context) {
-        mContext = context.getApplicationContext();
-        init(context);
+        if (context != null) {
+            mContext = context.getApplicationContext();
+            init(mContext);
+        }
     }
 
     public void init(Context context) {
@@ -90,7 +93,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     @Override
     public void startDownload(Context context) {
-        downLoadAPK(mInfo.url);
+        goDownloadApk();
     }
 
     @Override
@@ -107,7 +110,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
     public void continueDownload(Context context) {
 
         if (!checkConnectionStatus(context)) {
-            downLoadAPK(mInfo.url);
+            goDownloadApk();
             return;
         }
         if (mDownloadService != null) {
@@ -228,20 +231,19 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
 
 
-    public void downLoadAPK(final String downUrl, final String fileName) {
+    public void downLoadAPK(final String downUrl, String fileName) {
         if (TextUtils.isEmpty(downUrl)) {
             return;
         }
 
+        if (TextUtils.isEmpty(fileName)) {
+            fileName = getFileNameByDownLoadUrl(downUrl);
+        }
         try {
             goDownloadApk(URLDecoder.decode(downUrl, "utf-8"), fileName);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-    }
-
-    public void downLoadAPK(final String downUrl) {
-        downLoadAPK(downUrl, getFileNameByDownLoadUrl(downUrl));
     }
 
 
@@ -287,7 +289,31 @@ public class DownloadServiceManage implements EngineImpl<String> {
         intent.putExtra(DOWNLOAD_APK_URL, downloadUrl);
         if (!TextUtils.isEmpty(fileName)) {
             intent.putExtra(DOWNLOAD_APK_NAME, fileName);
+        } else {
+            intent.putExtra(DOWNLOAD_APK_NAME, getFileNameByDownLoadUrl(downloadUrl));
         }
+        mContext.startService(intent);
+    }
+
+    private void goDownloadApk() {
+        if (mContext == null) {
+            return;
+        }
+        if (!mConnected) {
+            init(mContext);
+        }
+
+        if (mInfo == null || TextUtils.isEmpty(mInfo.url)) {
+            return;
+        }
+        Intent intent = new Intent(mContext, DownloadService.class);
+        intent.putExtra(DOWNLOAD_APK_URL, mInfo.url);
+        if (!TextUtils.isEmpty(mInfo.name)) {
+            intent.putExtra(DOWNLOAD_APK_NAME, mInfo.name);
+        } else {
+            intent.putExtra(DOWNLOAD_APK_NAME, getFileNameByDownLoadUrl(mInfo.url));
+        }
+        intent.putExtra(DOWNLOAD_APK_AD_ID, mInfo.adId);
         mContext.startService(intent);
     }
 }

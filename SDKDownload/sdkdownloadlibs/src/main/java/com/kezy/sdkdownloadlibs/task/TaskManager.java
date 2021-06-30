@@ -36,10 +36,10 @@ public class TaskManager {
         return INSTANCE.instance;
     }
 
-    public TaskImpl createDownloadTask(EngineImpl taskEngine, DownloadInfo info) {
+    public TaskImpl createDownloadTask(Context context, DownloadInfo info) {
         DownloadTask task = getTaskByOnlyKey(info.onlyKey());
         if (task == null) {
-            task = new DownloadTask(taskEngine, info);
+            task = new DownloadTask(context, info);
             updateTask(task);
         }
         return task;
@@ -77,21 +77,16 @@ public class TaskManager {
         Log.e("--------msg", "--------2 save local data ");
     }
 
-
-    private class DownloadTask<T extends EngineImpl> implements TaskImpl {
-        public T mTaskManager;
+    private class DownloadTask implements TaskImpl {
+        public EngineImpl mTaskManager;
         public DownloadInfo mDownloadInfo;
 
-        public DownloadTask(T taskManager, DownloadInfo info) {
-            if (taskManager == null) {
-                this.mTaskManager = (T) new ApiDownloadManager();
+        public DownloadTask(Context context,DownloadInfo info) {
+            if (info.downloadType == EngineImpl.DownloadType.TYPE_XIMA) {
+                mTaskManager = new DownloadServiceManage(context);
             } else {
-                this.mTaskManager = taskManager;
-            }
-            if (taskManager instanceof ApiDownloadManager) {
+                mTaskManager = new ApiDownloadManager();
                 info.downloadType = EngineImpl.DownloadType.TYPE_API;
-            } else if (taskManager instanceof DownloadServiceManage) {
-                info.downloadType = EngineImpl.DownloadType.TYPE_XIMA;
             }
             this.mDownloadInfo = info;
             mTaskManager.bindDownloadInfo(info);
