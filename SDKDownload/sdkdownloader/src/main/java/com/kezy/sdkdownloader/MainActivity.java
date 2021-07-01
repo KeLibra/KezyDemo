@@ -1,5 +1,7 @@
 package com.kezy.sdkdownloader;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +14,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.notifylib.NotificationChannels;
+import com.kezy.sdkdownloadlibs.GetBroadcast;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.impls.TaskImpl;
 import com.kezy.sdkdownloadlibs.listener.IDownloadStatusListener;
@@ -36,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        GetBroadcast.registerReceiver(MainActivity.this);
+
         pbBar = findViewById(R.id.probar);
         btnDownload = findViewById(R.id.btn_download);
         tvPb = findViewById(R.id.tv_pb);
@@ -51,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
 
         TaskImpl task = TaskManager.getInstance().createDownloadTask(MainActivity.this,
                 new DownloadInfo
-                        .Builder(url_113MB, 0)
-                        .setDownloaderType(DownloadInfo.DownloadTpye.XIMA)
+                        .Builder(url_35MB, 0)
+                        .setDownloaderType(DownloadInfo.DownloadTpye.API)
                         .build());
 
         btnApi = findViewById(R.id.btn_api);
@@ -84,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
                 int status = task.getStatus();
                 switch (status) {
                     case DownloadInfo.Status.WAITING:
+                    case DownloadInfo.Status.DELETE:
                         task.start(MainActivity.this);
                         break;
                     case DownloadInfo.Status.STARTED:
@@ -94,9 +101,11 @@ public class MainActivity extends AppCompatActivity {
                         task.install(MainActivity.this);
                         break;
                     case DownloadInfo.Status.STOPPED:
+                    case DownloadInfo.Status.ERROR:
                         task.reStart(MainActivity.this);
                         break;
-                    case DownloadInfo.Status.DELETE:
+                    case DownloadInfo.Status.INSTALLED:
+                        task.openApp(MainActivity.this);
                         break;
                     default:
                         throw new IllegalStateException("Unexpected value: " + status);
@@ -108,13 +117,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStart(String onlyKey, boolean isRestart) {
 
-                Log.v("--------msg", " ---- " + onlyKey);
+                Log.v("--------msg", " ---- isRestart . " + isRestart);
                 btnDownload.setText("下载中...");
                 if (isRestart) {
                     return;
                 }
                 pbBar.setProgress(0);
-                tvPb.setText("0 % -- " + getFileSize(task.getInfo().tempSize) + "/"+getFileSize(task.getInfo().totalSize));
+                tvPb.setText("0 % - " + DownloadUtils.getFileSize(task.getInfo().tempSize) + "/" + DownloadUtils.getFileSize(task.getInfo().totalSize));
             }
 
             @Override
@@ -136,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProgress(String onlyKey) {
                 btnDownload.setText("下载中...");
                 pbBar.setProgress(task.getInfo().progress);
-                tvPb.setText(task.getInfo().progress + " % -- " + getFileSize(task.getInfo().tempSize) + "/"+getFileSize(task.getInfo().totalSize));
+                tvPb.setText(task.getInfo().progress + " % - " + DownloadUtils.getFileSize(task.getInfo().tempSize) + "/" + DownloadUtils.getFileSize(task.getInfo().totalSize));
             }
 
             @Override
@@ -148,17 +157,16 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(String onlyKey) {
                 btnDownload.setText("安装");
                 pbBar.setProgress(100);
-                tvPb.setText("100 % -- " + getFileSize(task.getInfo().tempSize) + "/"+getFileSize(task.getInfo().totalSize));
+                tvPb.setText("100 % - " + DownloadUtils.getFileSize(task.getInfo().tempSize) + "/" + DownloadUtils.getFileSize(task.getInfo().totalSize));
             }
 
             @Override
             public void onInstallBegin(String onlyKey) {
-
             }
 
             @Override
             public void onInstallSuccess(String onlyKey) {
-
+                btnDownload.setText("打开");
             }
         });
     }
@@ -166,22 +174,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        TaskManager.getInstance().destroy();
+        GetBroadcast.unregisterReceiver(MainActivity.this);
     }
 
 
-    public static String getFileSize(double length) {
-        if (length < 1024) {
-            return String.format("%.1f", length) + "B";
-        }
-        length /= 1024f;
-        if (length < 1024) {
-            return String.format("%.1f", length) + "K";
-        }
-        length /= 1024f;
-        if (length < 1024) {
-            return String.format("%.1f", length) + "M";
-        }
-        length /= 1024f;
-        return String.format("%.1f", length) + "G";
-    }
 }

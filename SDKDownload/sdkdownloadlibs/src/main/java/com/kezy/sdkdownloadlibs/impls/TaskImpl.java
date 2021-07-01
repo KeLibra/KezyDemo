@@ -34,4 +34,6 @@ public interface TaskImpl {
     int getStatus();
 
     void addTaskListener(IDownloadTaskListener listener);
+
+    void openApp(Context context);
 }

@@ -45,6 +45,7 @@ public class DownloadInfo implements Parcelable {
     public String icon; // apk icon url
     public int downloadType; // 下载器类型
 
+    public String packageName; // 包名
 
     // 下载过程中，自动生成的信息
     public String path; // 下载path
@@ -117,7 +118,6 @@ public class DownloadInfo implements Parcelable {
     }
 
 
-
     public String getFilePath() {
         return new StringBuilder()
                 /*
@@ -126,6 +126,7 @@ public class DownloadInfo implements Parcelable {
                  */
                 .append(path).append(File.separator).append(name).toString();
     }
+
 
     public String onlyKey() {
         Log.e("--------msg", " -----get only key =  " + url + "_" + adId + "_" + downloadType);

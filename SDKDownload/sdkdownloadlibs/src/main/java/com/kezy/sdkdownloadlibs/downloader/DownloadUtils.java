@@ -1,7 +1,11 @@
 package com.kezy.sdkdownloadlibs.downloader;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
@@ -12,6 +16,8 @@ import androidx.core.content.FileProvider;
 
 
 import java.io.File;
+import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * @Author Kezy
@@ -98,5 +104,81 @@ public class DownloadUtils {
         } catch (Exception e) {
             Log.d("-------msgTAG", "The selected file can't be shared: " + fileName);
         }
+    }
+
+    /**
+     * 通过 apk 下载路径获取  apk包名
+     * @param filePath
+     * @return
+     */
+    public static String getPackageNameByFilepath(Context context, String filePath) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_ACTIVITIES);
+            if (packageInfo != null && packageInfo.applicationInfo != null) {
+                try {
+                    String packName = packageInfo.applicationInfo.packageName;
+                    return packName;
+                }catch (Exception e) {
+                }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 通过 apk 包名启动app
+     * @param packageName
+     */
+    public static void startAppByPackageName(Context context, String packageName) {
+        if (TextUtils.isEmpty(packageName) || context == null) {
+            return;
+        }
+        try {
+            // 创建一个类别为CATEGORY_LAUNCHER的该包名的Intent
+            Intent resolveIntent = new Intent(Intent.ACTION_MAIN, null);
+            resolveIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            resolveIntent.setPackage(packageName);
+
+            List<ResolveInfo> resolveinfoList = context.getPackageManager()
+                    .queryIntentActivities(resolveIntent, 0);
+
+            if (resolveinfoList == null || resolveinfoList.size() == 0) {
+                return;
+            }
+
+            ResolveInfo resolveinfo = resolveinfoList.iterator().next();
+            if (resolveinfo != null) {
+                String infoPackageName = resolveinfo.activityInfo.packageName;
+                String className = resolveinfo.activityInfo.name;
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+                ComponentName cn = new ComponentName(infoPackageName, className);
+                intent.setComponent(cn);
+                context.startActivity(intent);
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getFileSize(double length) {
+        if (length < 1024) {
+            return String.format("%.1f", length) + "B";
+        }
+        length /= 1024f;
+        if (length < 1024) {
+            return String.format("%.1f", length) + "K";
+        }
+        length /= 1024f;
+        if (length < 1024) {
+            return String.format("%.1f", length) + "M";
+        }
+        length /= 1024f;
+        return String.format("%.1f", length) + "G";
     }
 }

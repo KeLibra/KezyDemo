@@ -1,8 +1,14 @@
 package com.kezy.sdkdownloadlibs.task;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.text.TextUtils;
 import android.util.Log;
 
+import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.downloader.api.ApiDownloadManager;
 import com.kezy.sdkdownloadlibs.downloader.xima.DownloadServiceManage;
 import com.kezy.sdkdownloadlibs.impls.EngineImpl;
@@ -12,6 +18,7 @@ import com.kezy.sdkdownloadlibs.listener.IDownloadTaskListener;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * @Author Kezy
@@ -20,7 +27,10 @@ import java.util.Map;
  */
 public class TaskManager {
 
+    private Context mContext;
     private Map<String, DownloadTask> mKeyTaskMap = new HashMap<>();
+
+    private IDownloadTaskListener mTaskListener;
 
     private TaskManager() {
         loadLocalData();
@@ -35,6 +45,10 @@ public class TaskManager {
     }
 
     public TaskImpl createDownloadTask(Context context, DownloadInfo info) {
+        if (context == null || info == null) {
+            return null;
+        }
+        this.mContext = context.getApplicationContext();
         DownloadTask task = getTaskByOnlyKey(info.onlyKey());
         if (task == null) {
             task = new DownloadTask(context, info);
@@ -42,6 +56,7 @@ public class TaskManager {
         }
         return task;
     }
+
 
     public void updateTask(DownloadTask task) {
         if (task == null || task.mDownloadInfo == null) {
@@ -149,39 +164,40 @@ public class TaskManager {
         }
 
         @Override
-        public void addTaskListener(IDownloadTaskListener statusListener) {
+        public void addTaskListener(IDownloadTaskListener taskListener) {
+            mTaskListener = taskListener;
             if (mTaskManager != null) {
                 mTaskManager.bindStatusChangeListener(new IDownloadStatusListener() {
                     @Override
                     public void onStart(String onlyKey, boolean isRestart, long totalSize) {
                         mDownloadInfo.status = DownloadInfo.Status.STARTED;
                         mDownloadInfo.totalSize = totalSize;
-                        if (statusListener != null) {
-                            statusListener.onStart(mDownloadInfo.onlyKey(), isRestart);
+                        if (taskListener != null) {
+                            taskListener.onStart(mDownloadInfo.onlyKey(), isRestart);
                         }
                     }
 
                     @Override
                     public void onPause(String onlyKey) {
                         mDownloadInfo.status = DownloadInfo.Status.STOPPED;
-                        if (statusListener != null) {
-                            statusListener.onPause(mDownloadInfo.onlyKey());
+                        if (taskListener != null) {
+                            taskListener.onPause(mDownloadInfo.onlyKey());
                         }
                     }
 
                     @Override
                     public void onContinue(String onlyKey) {
                         mDownloadInfo.status = DownloadInfo.Status.DOWNLOADING;
-                        if (statusListener != null) {
-                            statusListener.onContinue(mDownloadInfo.onlyKey());
+                        if (taskListener != null) {
+                            taskListener.onContinue(mDownloadInfo.onlyKey());
                         }
                     }
 
                     @Override
                     public void onRemove(String onlyKey) {
                         mDownloadInfo.status = DownloadInfo.Status.DELETE;
-                        if (statusListener != null) {
-                            statusListener.onRemove(mDownloadInfo.onlyKey());
+                        if (taskListener != null) {
+                            taskListener.onRemove(mDownloadInfo.onlyKey());
                         }
                     }
 
@@ -190,16 +206,16 @@ public class TaskManager {
                         mDownloadInfo.status = DownloadInfo.Status.DOWNLOADING;
                         mDownloadInfo.tempSize = (long) (mDownloadInfo.totalSize * progress / 100);
                         mDownloadInfo.progress = progress;
-                        if (statusListener != null) {
-                            statusListener.onProgress(mDownloadInfo.onlyKey());
+                        if (taskListener != null) {
+                            taskListener.onProgress(mDownloadInfo.onlyKey());
                         }
                     }
 
                     @Override
                     public void onError(String onlyKey) {
                         mDownloadInfo.status = DownloadInfo.Status.ERROR;
-                        if (statusListener != null) {
-                            statusListener.onError(mDownloadInfo.onlyKey());
+                        if (taskListener != null) {
+                            taskListener.onError(mDownloadInfo.onlyKey());
                         }
                     }
 
@@ -207,20 +223,29 @@ public class TaskManager {
                     public void onSuccess(String onlyKey, String path) {
                         mDownloadInfo.status = DownloadInfo.Status.FINISHED;
                         mDownloadInfo.path = path;
-                        if (statusListener != null) {
-                            statusListener.onSuccess(mDownloadInfo.onlyKey());
+                        mDownloadInfo.packageName = DownloadUtils.getPackageNameByFilepath(mContext, path);
+                        if (taskListener != null) {
+                            taskListener.onSuccess(mDownloadInfo.onlyKey());
                         }
                     }
 
                     @Override
                     public void onInstallBegin(String onlyKey) {
                         mDownloadInfo.status = DownloadInfo.Status.FINISHED;
-                        if (statusListener != null) {
-                            statusListener.onInstallBegin(mDownloadInfo.onlyKey());
+                        if (taskListener != null) {
+                            taskListener.onInstallBegin(mDownloadInfo.onlyKey());
                         }
                     }
                 });
             }
         }
+
+        @Override
+        public void openApp(Context context) {
+            DownloadUtils.startAppByPackageName(context, mDownloadInfo.packageName);
+        }
+    }
+
+    public void destroy(){
     }
 }

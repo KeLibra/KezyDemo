@@ -133,7 +133,6 @@ public class DownloadThread extends Thread{
 
         boolean isRestart = task.tempSize != 0;
         if (task.retryCount == 0) {
-            // TODO: 2021/6/22 handle start (isRestart)
             if (handler != null) {
                Message message = Message.obtain();
                message.what = DOWN_START;
@@ -141,8 +140,8 @@ public class DownloadThread extends Thread{
                message.obj = task;
                handler.sendMessage(message);
             }
-            Log.v("--------msg v2", " ------ isRestart = " + isRestart);
         }
+        Log.v("--------msg v2", " ------ isRestart = " + isRestart);
 
         long curSize = task.tempSize;
         HttpURLConnection connection = null;

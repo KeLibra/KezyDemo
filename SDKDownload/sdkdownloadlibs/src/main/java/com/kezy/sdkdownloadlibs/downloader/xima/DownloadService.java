@@ -284,7 +284,7 @@ public class DownloadService extends Service {
 
                 case DOWN_START:
                     Log.e("----------msg", " ------- DOWN_START ----   ");
-                    handleStart(getDownloadInfoByUrl(task.url), task.tempSize == 0);
+                    handleStart(getDownloadInfoByUrl(task.url), task.tempSize != 0);
                     break;
                 case DOWN_ERROR:
                     Log.e("----------msg", " ------- err ----   ");
