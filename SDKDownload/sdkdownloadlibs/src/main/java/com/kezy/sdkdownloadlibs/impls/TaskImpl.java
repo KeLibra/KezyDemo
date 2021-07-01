@@ -2,7 +2,8 @@ package com.kezy.sdkdownloadlibs.impls;
 
 import android.content.Context;
 
-import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
+import com.kezy.sdkdownloadlibs.listener.IDownloadStatusListener;
+import com.kezy.sdkdownloadlibs.listener.IDownloadTaskListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 
 /**
@@ -32,5 +33,5 @@ public interface TaskImpl {
 
     int getStatus();
 
-    void setDownloadStatusListener(DownloadStatusChangeListener listener);
+    void addTaskListener(IDownloadTaskListener listener);
 }

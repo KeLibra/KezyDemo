@@ -11,7 +11,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
-import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
+import com.kezy.sdkdownloadlibs.listener.IDownloadStatusListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.impls.EngineImpl;
 
@@ -27,7 +27,7 @@ import static com.kezy.sdkdownloadlibs.downloader.xima.DownloadService.DOWNLOAD_
 
 /**
  */
-public class DownloadServiceManage implements EngineImpl<String> {
+public class DownloadServiceManage implements EngineImpl {
 
     private boolean mConnected = false;
 
@@ -38,7 +38,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
 
     private DownloadInfo mInfo;
 
-    private DownloadStatusChangeListener mListener;
+    private IDownloadStatusListener mListener;
 
 
     public DownloadServiceManage(Context context) {
@@ -56,7 +56,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
         context.bindService(new Intent(context, DownloadService.class), mConn, Context.BIND_AUTO_CREATE);
     }
 
-    @Override
     public void bindDownloadInfo(DownloadInfo info) {
 
         Log.e("----------", " -------- bindDownloadInfo " + mDownloadService);
@@ -68,7 +67,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     @Override
-    public void bindStatusChangeListener(DownloadStatusChangeListener listener) {
+    public void bindStatusChangeListener(IDownloadStatusListener listener) {
         if (mDownloadService != null) {
             mDownloadService.addDownloadStatueListener(listener);
         } else {
@@ -76,7 +75,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
         }
     }
 
-    @Override
     public DownloadInfo getInfo() {
         if (mDownloadService == null) {
             Log.i("-------msg", " v2 manager info " + mInfo);
@@ -92,12 +90,12 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     @Override
-    public void startDownload(Context context) {
+    public void startDownload(Context context, String url) {
         goDownloadApk();
     }
 
     @Override
-    public void pauseDownload(Context context) {
+    public void pauseDownload(Context context, String url) {
         if (!checkConnectionStatus(context)) {
             return;
         }
@@ -107,7 +105,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     @Override
-    public void continueDownload(Context context) {
+    public void continueDownload(Context context, String url) {
 
         if (!checkConnectionStatus(context)) {
             goDownloadApk();
@@ -119,7 +117,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     @Override
-    public void deleteDownload(Context context) {
+    public void deleteDownload(Context context, String url) {
         if (!checkConnectionStatus(context)) {
             return;
         }
@@ -128,8 +126,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
         }
     }
 
-    @Override
-    public int getStatus(Context context) {
+    public int getStatus(Context context, String url) {
         if (mDownloadService == null) {
             return mInfo.status;
         }
@@ -137,7 +134,7 @@ public class DownloadServiceManage implements EngineImpl<String> {
     }
 
     @Override
-    public void installApk(Context context) {
+    public void installApk(Context context, String url) {
         if (mDownloadService != null) {
             DownloadUtils.installApk(mContext, mDownloadService.getDownloadSavePath(mInfo.url));
         }
@@ -149,11 +146,6 @@ public class DownloadServiceManage implements EngineImpl<String> {
             return mInfo.path;
         }
         return mDownloadService.getDownloadSavePath(mInfo.url);
-    }
-
-    @Override
-    public int getDownloaderType() {
-        return DownloadType.TYPE_XIMA;
     }
 
     @Override

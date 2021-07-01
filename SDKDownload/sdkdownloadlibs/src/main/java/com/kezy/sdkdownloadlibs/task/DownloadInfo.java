@@ -25,6 +25,7 @@ public class DownloadInfo implements Parcelable {
         int STOPPED = 4;     //暂停
         int ERROR = 5;       //错误
         int DELETE = 6;      // 删除
+        int INSTALLED = 7;   // 已安装
     }
 
     public interface DownloadTpye{
@@ -49,11 +50,15 @@ public class DownloadInfo implements Parcelable {
     public String path; // 下载path
     public int progress; // 进度
     public long taskId; // 任务id
+    public long totalSize; // apk总大小
+    public long tempSize; // apk 已下载大小
+
+
+
+    // 喜马下载器，特殊的信息
     public double speed; // 速度
     public int retryCount = 0;
     public boolean isRunning = true;
-    public long totalSize; // apk总大小
-    public long tempSize; // apk 已下载大小
 
 
     private DownloadInfo() {

@@ -14,7 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.kezy.notifylib.NotificationChannels;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.impls.TaskImpl;
-import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
+import com.kezy.sdkdownloadlibs.listener.IDownloadStatusListener;
+import com.kezy.sdkdownloadlibs.listener.IDownloadTaskListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.task.TaskManager;
 
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
         TaskImpl task = TaskManager.getInstance().createDownloadTask(MainActivity.this,
                 new DownloadInfo
-                        .Builder(url_35MB, 0)
+                        .Builder(url_113MB, 0)
                         .setDownloaderType(DownloadInfo.DownloadTpye.XIMA)
                         .build());
 
@@ -103,13 +104,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        task.setDownloadStatusListener(new DownloadStatusChangeListener() {
+        task.addTaskListener(new IDownloadTaskListener() {
             @Override
             public void onStart(String onlyKey, boolean isRestart) {
+
                 Log.v("--------msg", " ---- " + onlyKey);
                 btnDownload.setText("下载中...");
+                if (isRestart) {
+                    return;
+                }
                 pbBar.setProgress(0);
-                tvPb.setText("0 %");
+                tvPb.setText("0 % -- " + getFileSize(task.getInfo().tempSize) + "/"+getFileSize(task.getInfo().totalSize));
             }
 
             @Override
@@ -128,10 +133,10 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onProgress(String onlyKey, int progress) {
+            public void onProgress(String onlyKey) {
                 btnDownload.setText("下载中...");
-                pbBar.setProgress(progress);
-                tvPb.setText(progress + " %");
+                pbBar.setProgress(task.getInfo().progress);
+                tvPb.setText(task.getInfo().progress + " % -- " + getFileSize(task.getInfo().tempSize) + "/"+getFileSize(task.getInfo().totalSize));
             }
 
             @Override
@@ -143,7 +148,17 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(String onlyKey) {
                 btnDownload.setText("安装");
                 pbBar.setProgress(100);
-                tvPb.setText("100 %");
+                tvPb.setText("100 % -- " + getFileSize(task.getInfo().tempSize) + "/"+getFileSize(task.getInfo().totalSize));
+            }
+
+            @Override
+            public void onInstallBegin(String onlyKey) {
+
+            }
+
+            @Override
+            public void onInstallSuccess(String onlyKey) {
+
             }
         });
     }
@@ -151,5 +166,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+
+    public static String getFileSize(double length) {
+        if (length < 1024) {
+            return String.format("%.1f", length) + "B";
+        }
+        length /= 1024f;
+        if (length < 1024) {
+            return String.format("%.1f", length) + "K";
+        }
+        length /= 1024f;
+        if (length < 1024) {
+            return String.format("%.1f", length) + "M";
+        }
+        length /= 1024f;
+        return String.format("%.1f", length) + "G";
     }
 }

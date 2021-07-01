@@ -19,8 +19,7 @@ import androidx.annotation.Nullable;
 
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.impls.EngineImpl;
-import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
-import com.kezy.sdkdownloadlibs.task.DownloadInfo;
+import com.kezy.sdkdownloadlibs.listener.IDownloadStatusListener;
 
 import java.io.File;
 import java.util.Objects;
@@ -30,7 +29,7 @@ import java.util.Objects;
  * @Time 2021/5/18
  * @Description
  */
-public class ApiDownloadManager implements EngineImpl<Long> {
+public class ApiDownloadManager implements EngineImpl {
 
     /**
      * 系统DownloadManager
@@ -42,67 +41,85 @@ public class ApiDownloadManager implements EngineImpl<Long> {
      */
     private ApiDownloadObserver downloadObserver;
 
-    private DownloadInfo mInfo;
+    private IDownloadStatusListener mListener;
 
-    private DownloadStatusChangeListener mListener;
+    private long mDownloadId;
 
+    private String mDownloadUrl;
 
-    @Override
-    public void bindDownloadInfo(DownloadInfo info) {
-        mInfo = info;
-    }
 
     @Override
-    public void bindStatusChangeListener(DownloadStatusChangeListener listener) {
+    public void bindStatusChangeListener(IDownloadStatusListener listener) {
         mListener = listener;
     }
 
-    @Override
-    public DownloadInfo getInfo() {
-        return mInfo;
-    }
 
     @Override
     public long getTaskId() {
 
-        return mInfo.taskId;
+        return mDownloadId;
     }
 
     @Override
-    public void startDownload(Context context) {
-        downLoadApk(context, mInfo.url, "", "");
+    public void startDownload(Context context, String url) {
+        downLoadApk(context, url, "", "");
     }
 
     @Override
-    public void pauseDownload(Context context) {
+    public void pauseDownload(Context context, String url) {
     }
 
     @Override
-    public void continueDownload(Context context) {
+    public void continueDownload(Context context, String url) {
     }
 
     @Override
-    public void deleteDownload(Context context) {
+    public void deleteDownload(Context context, String url) {
         try {
-            downloadManager.remove(mInfo.taskId);
-            mInfo.status = DownloadInfo.Status.DELETE;
+            downloadManager.remove(mDownloadId);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public int getStatus(Context context) {
-        if (mInfo != null) {
-            return mInfo.status;
-        }
-        return DownloadInfo.Status.WAITING;
+    public void installApk(Context context, String url) {
+        DownloadUtils.installApk(context, getDownloadFile(context));
+    }
 
+    /**
+     * 获取下载的文件
+     *
+     * @return file
+     */
+    @Override
+    public String getDownloadFile(Context context) {
+        Log.e("-------msg", " getDownloadFile = ");
+        long downloadId = getTaskId();
+        if (downloadId <= 0) {
+            return "";
+        }
+        Log.e("-------msg", " getDownloadFile = downloadId ---- " + downloadId);
+        DownloadManager.Query query = new DownloadManager.Query();
+        Cursor cursor = downloadManager.query(query.setFilterById(downloadId));
+        if (cursor != null && cursor.moveToFirst()) {
+            String fileUri = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+            Log.e("-------msg", " getDownloadFile = fileUri =  " + fileUri);
+            if (!TextUtils.isEmpty(fileUri)) {
+                String apkPath = Uri.parse(fileUri).getPath();
+                if (!TextUtils.isEmpty(apkPath)) {
+                    Log.e("-------msg", " apk path = " + apkPath);
+                    return new File(apkPath).getPath();
+                }
+            }
+            cursor.close();
+        }
+        return null;
     }
 
     @Override
-    public void installApk(Context context) {
-        DownloadUtils.installApk(context, mInfo.path);
+    public void destroy() {
+
     }
 
     /**
@@ -111,6 +128,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
     @SuppressLint("MissingPermission")
     public void downLoadApk(Context context, String downloadUrl, String savePath, String appName) {
 
+        this.mDownloadUrl = downloadUrl;
         Log.e("-------msg", " ----- downloadUrl ！" + downloadUrl);
         try {
             if (context != null) {
@@ -169,10 +187,9 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                 // 设置媒体类型为apk文件
                 request.setMimeType("application/vnd.android.package-archive");
                 // 开启下载，返回下载id
-                long lastDownloadId = downloadManager.enqueue(request);
-                createTask(lastDownloadId, appName);
+                mDownloadId = downloadManager.enqueue(request);
                 // 如需要进度及下载状态，增加下载监听
-                downloadObserver = new ApiDownloadObserver(context, lastDownloadId);
+                downloadObserver = new ApiDownloadObserver(context, mDownloadId);
                 context.getContentResolver().registerContentObserver(Uri.parse("content://downloads/my_downloads"), true, downloadObserver);
                 Toast.makeText(context, "apk 开始下载", Toast.LENGTH_LONG).show();
             }
@@ -180,13 +197,6 @@ public class ApiDownloadManager implements EngineImpl<Long> {
             e.printStackTrace();
             // 防止有些厂商更改了系统的downloadManager
         }
-    }
-
-    private void createTask(long lastDownloadId, String appName) {
-
-        // 如果 已有task， 则更新taskID。 若无task， 则创建
-        mInfo.taskId = lastDownloadId;
-        mInfo.name = appName;
     }
 
     /**
@@ -241,45 +251,7 @@ public class ApiDownloadManager implements EngineImpl<Long> {
     }
 
 
-    /**
-     * 获取下载的文件
-     *
-     * @return file
-     */
-    @Override
-    public String getDownloadFile(Context context) {
-        Log.e("-------msg", " getDownloadFile = ");
-        long downloadId = getTaskId();
-        if (downloadId <= 0) {
-            return "";
-        }
-        Log.e("-------msg", " getDownloadFile = downloadId ---- " + downloadId);
-        DownloadManager.Query query = new DownloadManager.Query();
-        Cursor cursor = downloadManager.query(query.setFilterById(downloadId));
-        if (cursor != null && cursor.moveToFirst()) {
-            String fileUri = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-            Log.e("-------msg", " getDownloadFile = fileUri =  " + fileUri);
-            if (!TextUtils.isEmpty(fileUri)) {
-                String apkPath = Uri.parse(fileUri).getPath();
-                if (!TextUtils.isEmpty(apkPath)) {
-                    Log.e("-------msg", " apk path = " + apkPath);
-                    return new File(apkPath).getPath();
-                }
-            }
-            cursor.close();
-        }
-        return null;
-    }
 
-    @Override
-    public int getDownloaderType() {
-        return DownloadType.TYPE_API;
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     @Nullable
     public String getDiskCachePath(Context context) {
@@ -333,6 +305,8 @@ public class ApiDownloadManager implements EngineImpl<Long> {
             queryDownloadStatus();
         }
 
+        private int lastProgress;
+        private boolean isStarted = false;
         /**
          * 检查下载的状态
          */
@@ -350,59 +324,56 @@ public class ApiDownloadManager implements EngineImpl<Long> {
                     } else {
                         mProgress = 0;
                     }
-                    mInfo.taskId = mDownloadId;
-                    mInfo.progress = mProgress;
-                    mInfo.totalSize = totalSize;
-                    mInfo.tempSize = currentSize;
-                    if (getDownloadFile(null) != null && TextUtils.isEmpty(mInfo.path)) {
-                        mInfo.path = getDownloadFile(null);
+                    if (lastProgress == mProgress){
+                        return;
                     }
 
                     Log.d(TAG, String.valueOf(mProgress));
                     switch (status) {
                         case DownloadManager.STATUS_PAUSED:
-                            mInfo.isRunning = false;
-                            mInfo.status = DownloadInfo.Status.STOPPED;
                             if (mListener != null) {
-                                mListener.onPause(mInfo.onlyKey());
+                                mListener.onPause("");
                             }
                             Log.d(TAG, "STATUS_PAUSED");
                             break;
                         case DownloadManager.STATUS_PENDING:
                             // 开始下载
-                            mInfo.isRunning = true;
-                            mInfo.status = DownloadInfo.Status.STARTED;
                             if (mListener != null) {
-                                mListener.onStart(mInfo.onlyKey(), false);
+                                mListener.onStart("", false, totalSize);
+                                isStarted = true;
                             }
                             Log.d(TAG, "STATUS_PENDING");
                             break;
                         case DownloadManager.STATUS_RUNNING:
-                            mInfo.isRunning = true;
-                            mInfo.status = DownloadInfo.Status.DOWNLOADING;
-
-                            if (mListener != null) {
-                                mListener.onProgress(mInfo.onlyKey(), mInfo.progress);
+                            if (!isStarted && mProgress == 0) {
+                                /*
+                                 * fix 系统下载器偶尔获取不到开始下载通知， 所以当没有获取到时，开始下载progress=0时补报一次
+                                 */
+                                mListener.onStart("", false, totalSize);
+                                isStarted = true;
+                            } else {
+                                if (mListener != null) {
+                                    mListener.onProgress("", mProgress);
+                                }
                             }
                             Log.d(TAG, "STATUS_RUNNING");
                             break;
                         case DownloadManager.STATUS_SUCCESSFUL:
                             if (!isEnd) {
                                 // 完成
-                                mInfo.isRunning = false;
-                                mInfo.status = DownloadInfo.Status.FINISHED;
                                 if (mListener != null) {
-                                    mListener.onSuccess(mInfo.onlyKey());
+                                    mListener.onSuccess("", getDownloadFile(mContext));
                                 }
                                 Log.d(TAG, "STATUS_SUCCESSFUL");
-                                installApk(mContext);
+                                installApk(mContext, getDownloadFile(mContext));
                             }
                             isEnd = true;
                             break;
                         case DownloadManager.STATUS_FAILED:
                             if (!isEnd) {
-                                mInfo.isRunning = false;
-                                mInfo.status = DownloadInfo.Status.ERROR;
+                                if (mListener != null) {
+                                    mListener.onError("");
+                                }
                                 Log.d(TAG, "STATUS_FAILED");
                             }
                             isEnd = true;

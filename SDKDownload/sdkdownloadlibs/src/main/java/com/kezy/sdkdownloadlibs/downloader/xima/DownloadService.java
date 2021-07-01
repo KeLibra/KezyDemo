@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 
 import com.kezy.notifylib.NotificationsManager;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
-import com.kezy.sdkdownloadlibs.listener.DownloadStatusChangeListener;
+import com.kezy.sdkdownloadlibs.listener.IDownloadStatusListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 
 import java.io.File;
@@ -71,15 +71,15 @@ public class DownloadService extends Service {
         return mBinder;
     }
 
-    private List<DownloadStatusChangeListener> mDownloadServiceStatueListeners = new CopyOnWriteArrayList<>();
+    private List<IDownloadStatusListener> mDownloadServiceStatueListeners = new CopyOnWriteArrayList<>();
 
-    public void addDownloadStatueListener(DownloadStatusChangeListener mListener) {
+    public void addDownloadStatueListener(IDownloadStatusListener mListener) {
         if (!mDownloadServiceStatueListeners.contains(mListener)) {
             mDownloadServiceStatueListeners.add(mListener);
         }
     }
 
-    public void removeDownloadStatueListener(DownloadStatusChangeListener l) {
+    public void removeDownloadStatueListener(IDownloadStatusListener l) {
         if (mDownloadServiceStatueListeners != null) {
             mDownloadServiceStatueListeners.remove(l);
         }
@@ -279,10 +279,11 @@ public class DownloadService extends Service {
                     NotificationsManager.getInstance().clearNotificationById(mNotifyManager, (int) task.timeId);
                     DownloadUtils.installApk(mContext, task.path);
                     handleDownloadSuccess(getDownloadInfoByUrl(task.url));
+                    handleInstallBegin(getDownloadInfoByUrl(task.url));
                     break;
 
                 case DOWN_START:
-                    Log.e("----------msg", " ------- err ----   ");
+                    Log.e("----------msg", " ------- DOWN_START ----   ");
                     handleStart(getDownloadInfoByUrl(task.url), task.tempSize == 0);
                     break;
                 case DOWN_ERROR:
@@ -312,49 +313,53 @@ public class DownloadService extends Service {
         }
     }
 
+
     private void handleRemove(DownloadInfo info) {
-        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+        for (IDownloadStatusListener l : mDownloadServiceStatueListeners) {
             l.onRemove(info.onlyKey());
         }
-
         Log.d(TAG, "handleRemove   " + info);
     }
 
     private void handlePause(DownloadInfo info) {
-        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+        for (IDownloadStatusListener l : mDownloadServiceStatueListeners) {
             l.onPause(info.onlyKey());
         }
-
         Log.d(TAG, "handlePause   " + info);
     }
 
     private void handleProgress(DownloadInfo info) {
-        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+        for (IDownloadStatusListener l : mDownloadServiceStatueListeners) {
             l.onProgress(info.onlyKey(), info.progress);
         }
-
         Log.d(TAG, "handleProgress   " + info);
     }
 
     private void handleError(DownloadInfo info) {
-        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
+        for (IDownloadStatusListener l : mDownloadServiceStatueListeners) {
             l.onError(info.onlyKey());
         }
         Log.d(TAG, "handleError   " + info);
     }
 
     private void handleDownloadSuccess(DownloadInfo info) {
-        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
-            l.onSuccess(info.onlyKey());
+        for (IDownloadStatusListener l : mDownloadServiceStatueListeners) {
+            l.onSuccess(info.onlyKey(), info.path);
         }
         Log.d(TAG, "handleDownloadSuccess   " + info);
     }
 
     private void handleStart(DownloadInfo info, boolean isRestart) {
-        for (DownloadStatusChangeListener l : mDownloadServiceStatueListeners) {
-            l.onStart(info.onlyKey(), isRestart);
+        for (IDownloadStatusListener l : mDownloadServiceStatueListeners) {
+            l.onStart(info.onlyKey(), isRestart, info.totalSize);
         }
 
         Log.d(TAG, "handleStart   " + info);
+    }
+
+    private void handleInstallBegin(DownloadInfo info) {
+        for (IDownloadStatusListener l : mDownloadServiceStatueListeners) {
+            l.onInstallBegin(info.onlyKey());
+        }
     }
 }
