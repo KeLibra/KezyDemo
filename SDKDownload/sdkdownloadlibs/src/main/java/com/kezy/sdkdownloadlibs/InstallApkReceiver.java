@@ -12,8 +12,8 @@ import android.widget.Toast;
  * @Time 2021/7/1
  * @Description
  */
-public class GetBroadcast extends BroadcastReceiver {
-    private static GetBroadcast mReceiver = new GetBroadcast();
+public class InstallApkReceiver extends BroadcastReceiver {
+    private static InstallApkReceiver mReceiver = new InstallApkReceiver();
     private static IntentFilter mIntentFilter;
     public static void registerReceiver(Context context) {
         mIntentFilter = new IntentFilter();

@@ -44,6 +44,7 @@ public class DownloadInfo implements Parcelable {
     public String desc; // apk desc
     public String icon; // apk icon url
     public int downloadType; // 下载器类型
+    private String onlyKey; // 唯一标识
 
     public String packageName; // 包名
 
@@ -74,6 +75,7 @@ public class DownloadInfo implements Parcelable {
         this.name = builder.name;
         this.desc = builder.desc;
         this.icon = builder.icon;
+        this.onlyKey = builder.onlyKey;
         this.downloadType = builder.downloadType;
     }
 
@@ -86,6 +88,7 @@ public class DownloadInfo implements Parcelable {
         private String desc; // apk desc
         private String icon; // apk icon url
         private int downloadType; // 下载器类型
+        private String onlyKey; // 唯一标识
 
 
         public Builder(String url, long adId) {
@@ -107,6 +110,12 @@ public class DownloadInfo implements Parcelable {
             this.icon = icon;
             return this;
         }
+
+        public Builder setOnlyKey(String onlyKey) {
+            this.onlyKey = onlyKey;
+            return this;
+        }
+
         public Builder setDownloaderType(int downloadType) {
             this.downloadType = downloadType;
             return this;
@@ -130,6 +139,9 @@ public class DownloadInfo implements Parcelable {
 
     public String onlyKey() {
         Log.e("--------msg", " -----get only key =  " + url + "_" + adId + "_" + downloadType);
+        if (!TextUtils.isEmpty(onlyKey)) {
+            return onlyKey;
+        }
         return url + "_" + adId + "_" + downloadType;
     }
 

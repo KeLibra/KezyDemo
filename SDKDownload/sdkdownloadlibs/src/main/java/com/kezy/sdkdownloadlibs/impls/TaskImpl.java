@@ -36,4 +36,6 @@ public interface TaskImpl {
     void addTaskListener(IDownloadTaskListener listener);
 
     void openApp(Context context);
+
+    void deleteApk(Context context);
 }
