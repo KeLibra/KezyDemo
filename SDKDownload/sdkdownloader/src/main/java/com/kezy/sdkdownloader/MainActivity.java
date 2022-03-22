@@ -1,7 +1,5 @@
 package com.kezy.sdkdownloader;
 
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,10 +12,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.notifylib.NotificationChannels;
-import com.kezy.sdkdownloadlibs.GetBroadcast;
+import com.kezy.sdkdownloadlibs.InstallApkReceiver;
 import com.kezy.sdkdownloadlibs.downloader.DownloadUtils;
 import com.kezy.sdkdownloadlibs.impls.TaskImpl;
-import com.kezy.sdkdownloadlibs.listener.IDownloadStatusListener;
 import com.kezy.sdkdownloadlibs.listener.IDownloadTaskListener;
 import com.kezy.sdkdownloadlibs.task.DownloadInfo;
 import com.kezy.sdkdownloadlibs.task.TaskManager;
@@ -40,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        GetBroadcast.registerReceiver(MainActivity.this);
+        InstallApkReceiver.registerReceiver(MainActivity.this);
 
         pbBar = findViewById(R.id.probar);
         btnDownload = findViewById(R.id.btn_download);
@@ -175,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         TaskManager.getInstance().destroy();
-        GetBroadcast.unregisterReceiver(MainActivity.this);
+        InstallApkReceiver.unregisterReceiver(MainActivity.this);
     }
 
 

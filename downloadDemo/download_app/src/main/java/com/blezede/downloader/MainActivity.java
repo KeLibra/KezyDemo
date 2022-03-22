@@ -144,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements Observer {
 
     class DownLoadAdapter extends RecyclerView.Adapter<DownLoadAdapter.Holder> {
 
-
         @NonNull
         @Override
         public Holder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
