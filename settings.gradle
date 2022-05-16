@@ -5,7 +5,6 @@ include ':floatViewDemo'
 include ':TextProgressBar'
 
 
-
 include ':downloadApi'
 
 
@@ -34,3 +33,5 @@ project(':sdkdownloadlibs').projectDir = (new File('SDKDownload/sdkdownloadlibs'
 project(':notifylib').projectDir = (new File('SDKDownload/notifylib'))
 
 
+include ':danmu'
+include ':danmuview'

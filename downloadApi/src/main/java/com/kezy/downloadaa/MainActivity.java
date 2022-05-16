@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvAppName;
     private EditText etAppUrl;
 
-    String apkUrl;
+    String apkUrl = "http://app.yiche.com/16/c1693.apk";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
         btnDownload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                apkUrl = etAppUrl.getText().toString().trim();
+//                apkUrl = etAppUrl.getText().toString().trim();
+                apkUrl = "http://app.yiche.com/16/c1693.apk";
                 if (TextUtils.isEmpty(apkUrl)) {
                     showErrorMsg("请输入apk下载链接");
                     return;

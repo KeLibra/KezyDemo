@@ -25,14 +25,15 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements Observer {
 
-    private static final String URL2 = "http://m.down.sandai.net/MobileThunder/Android_5.34.2.4700/XLWXguanwang.apk";
-    private static final String URL1 = "http://s1.music.126.net/download/android/CloudMusic_official_4.0.0_179175.apk";
-    private static final String URL3 = "https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk";
-    private static final String URL4 = "http://dldir1.qq.com/weixin/android/weixin703android1400.apk";
-    private static final String URL5 = "http://gdown.baidu.com/data/wisegame/ff4efd277de65cb8/weibo_3854.apk";
-    private static final String URL6 = "http://download.anfensi.com/apk/bilibiliapp_anfensi.com.apk";
-    private static final String URL7 = "http://gdown.baidu.com/data/wisegame/a6486d3de30f27e4/aiqiyijisuban_81000.apk";
-    private static final String URL8 = "https://pdds-cdn.uc.cn/3-0/UCBrowser/1904/8b94c513a237702d7a326cf9ff62d17e/UCBrowser_V12.3.8.1018_android_pf145_(Build190409102211).apk?auth_key=1555654505-0-0-f9d0b9544d5332659c6cd99334edb9d4&SESSID=e3f8397b7d1c2791ac23bdb639cb5ba9";
+    private static final String URL1 = "https://app.yiche.com/16/c1693.apk";
+//    private static final String URL1 = "http://s1.music.126.net/download/android/CloudMusic_official_4.0.0_179175.apk";
+//    private static final String URL2 = "http://m.down.sandai.net/MobileThunder/Android_5.34.2.4700/XLWXguanwang.apk";
+//    private static final String URL3 = "https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk";
+//    private static final String URL4 = "http://dldir1.qq.com/weixin/android/weixin703android1400.apk";
+//    private static final String URL5 = "http://gdown.baidu.com/data/wisegame/ff4efd277de65cb8/weibo_3854.apk";
+//    private static final String URL6 = "http://download.anfensi.com/apk/bilibiliapp_anfensi.com.apk";
+//    private static final String URL7 = "http://gdown.baidu.com/data/wisegame/a6486d3de30f27e4/aiqiyijisuban_81000.apk";
+//    private static final String URL8 = "https://pdds-cdn.uc.cn/3-0/UCBrowser/1904/8b94c513a237702d7a326cf9ff62d17e/UCBrowser_V12.3.8.1018_android_pf145_(Build190409102211).apk?auth_key=1555654505-0-0-f9d0b9544d5332659c6cd99334edb9d4&SESSID=e3f8397b7d1c2791ac23bdb639cb5ba9";
     List<TaskModel> list = new ArrayList<>();
     RecyclerView mRecyclerView;
     IDownLoadManager mDownLoadManager;
@@ -45,13 +46,13 @@ public class MainActivity extends AppCompatActivity implements Observer {
         setContentView(R.layout.activity_main);
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.INTERNET}, 1);
         list.add(new TaskModel(URL1));
-        list.add(new TaskModel(URL2));
-        list.add(new TaskModel(URL3));
-        list.add(new TaskModel(URL4));
-        list.add(new TaskModel(URL5));
-        list.add(new TaskModel(URL6));
-        list.add(new TaskModel(URL7));
-        list.add(new TaskModel(URL8));
+//        list.add(new TaskModel(URL2));
+//        list.add(new TaskModel(URL3));
+//        list.add(new TaskModel(URL4));
+//        list.add(new TaskModel(URL5));
+//        list.add(new TaskModel(URL6));
+//        list.add(new TaskModel(URL7));
+//        list.add(new TaskModel(URL8));
         mRecyclerView = findViewById(R.id.recycler_view);
         mLinearLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);

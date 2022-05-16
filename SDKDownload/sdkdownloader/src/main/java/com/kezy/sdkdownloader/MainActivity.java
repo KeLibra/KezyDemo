@@ -25,7 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private Button btnApi, btnXima, btnDownload;
 
     private String url_113MB = "https://js.a.kspkg.com/bs2/fes/kwai-android-ANDROID_KS_LDM_SJYY_CPA_NJYSJLLQKJB-gifmakerrelease-9.1.11.18473_x32_a35aec.apk";
-    private String url_35MB = "http://b.xzfile.com/apk3/xgmfxsv1.0.9.241_downcc.com.apk";
+//    private String url_35MB = "http://b.xzfile.com/apk3/xgmfxsv1.0.9.241_downcc.com.apk";
+    private String url_35MB = "http://app.yiche.com/16/c1693.apk";
 
     private ProgressBar pbBar;
     private TextView tvPb;
