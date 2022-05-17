@@ -42,6 +42,8 @@ public class DanMuView extends LinearLayout {
     private int maxItem = DEFAULT_MAX_ITEM;
     private int delayTime = DEFAULT_DELAY_TIME;
 
+    private boolean mIsAutoPlay = true;
+
     private String[] texts = new String[]{
             "1. 火来我在灰烬中等你",
             "2. 我对这个世界没什么可说的。我对这个世界没什么可说的。我对这个世界没什么可说的。",
@@ -68,14 +70,22 @@ public class DanMuView extends LinearLayout {
         return isPlaying;
     }
 
+    public boolean ismIsAutoPlay() {
+        return mIsAutoPlay;
+    }
+
+    public void setIsAutoPlay(boolean IsAutoPlay) {
+        this.mIsAutoPlay = IsAutoPlay;
+    }
+
     private void init() {
         setShowDividers(SHOW_DIVIDER_MIDDLE);
         setOrientation(VERTICAL);
 
         transition = new LayoutTransition();
         //添加动画
-        ObjectAnimator valueAnimator = ObjectAnimator.ofFloat(null, "alpha", 0, 1);
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
+        ObjectAnimator addItemAnimator = ObjectAnimator.ofFloat(null, "alpha", 0, 1);
+        addItemAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
@@ -94,12 +104,44 @@ public class DanMuView extends LinearLayout {
                 }
             }
         });
-        transition.setAnimator(LayoutTransition.APPEARING, valueAnimator);
+
+//        addItemAnimator.addListener(new Animator.AnimatorListener() {
+//            @Override
+//            public void onAnimationStart(Animator animation) {
+//                //当前展示超过四条，执行删除动画
+//                if (getChildCount() >= maxItem) {
+//                    handler.sendEmptyMessage(1);
+//                }
+//            }
+//
+//            @Override
+//            public void onAnimationEnd(Animator animation) {
+//                if (getChildCount() > maxItem) {
+//                    //动画执行完毕，删除view
+//                    handler.sendEmptyMessage(2);
+//                }
+//            }
+//
+//            @Override
+//            public void onAnimationCancel(Animator animation) {
+//
+//            }
+//
+//            @Override
+//            public void onAnimationRepeat(Animator animation) {
+//
+//            }
+//        });
+
+
+        transition.setAnimator(LayoutTransition.APPEARING, addItemAnimator);
+
         //删除动画
         PropertyValuesHolder alpha = PropertyValuesHolder.ofFloat("alpha", 0, 0);
-        ObjectAnimator objectAnimator = ObjectAnimator.ofPropertyValuesHolder(null, new PropertyValuesHolder[]{alpha}).setDuration(transition.getDuration(LayoutTransition.DISAPPEARING));
+        ObjectAnimator deleteItemAnimator = ObjectAnimator.ofPropertyValuesHolder(null, new PropertyValuesHolder[]{alpha})
+                .setDuration(transition.getDuration(LayoutTransition.DISAPPEARING));
+        transition.setAnimator(LayoutTransition.DISAPPEARING, deleteItemAnimator);
 
-        transition.setAnimator(LayoutTransition.DISAPPEARING, objectAnimator);
         setLayoutTransition(transition);
     }
 
@@ -159,6 +201,7 @@ public class DanMuView extends LinearLayout {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 0:
+                    Log.w("-------msg", " ------ 更新一个view " + index + ", length = " + texts.length);
                     if (index >= texts.length) {
                         index = 0;
                     }
@@ -168,15 +211,16 @@ public class DanMuView extends LinearLayout {
                     index++;
                     break;
                 case 1:
+                    Log.d("-------msg", " ------给展示的第一个view增加渐变透明动画 ");
                     if (getChildAt(0) != null && getChildAt(0).animate() != null
-                            && getChildAt(0).animate().alpha(0) != null
-                            && getChildAt(0).animate().alpha(0).setDuration(transition.getDuration(LayoutTransition.APPEARING)) != null) {
+                            && getChildAt(0).animate().alpha(0) != null) {
                         //给展示的第一个view增加渐变透明动画
                         getChildAt(0).animate().alpha(0).setDuration(transition.getDuration(LayoutTransition.APPEARING)).start();
                     }
                     break;
                 case 2:
                     //删除顶部view
+                    Log.v("-------msg", " ------删除顶部view ");
                     removeViewAt(0);
                     break;
             }
@@ -185,7 +229,12 @@ public class DanMuView extends LinearLayout {
 
 
     public void startPlay() {
+        Log.e("-------msg", " ------ startPlay -----   isPlaying = " + isPlaying);
         if (isPlaying) {
+            return;
+        }
+        Log.e("-------msg", " ------ startPlay -----   mIsAutoPlay = " + mIsAutoPlay);
+        if (!mIsAutoPlay) {
             return;
         }
         if (handler != null) {
@@ -204,8 +253,9 @@ public class DanMuView extends LinearLayout {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        Log.e("-------msg", " ------ onAttachedToWindow ----- ");
         startPlay();
-        Log.e("-------msg", " ------ onAttachedToWindow -----");
+
     }
 
     @Override
@@ -213,5 +263,19 @@ public class DanMuView extends LinearLayout {
         super.onDetachedFromWindow();
         stopPlay();
         Log.e("-------msg", " ------ onDetachedFromWindow -----");
+    }
+
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility == View.VISIBLE){
+            Log.d("-------msg" ,"可见 ---- mIsAutoPlay = " + mIsAutoPlay);
+            //开始某些任务
+            startPlay();
+        } else if(visibility == INVISIBLE || visibility == GONE){
+            Log.d("-------msg" ,"不可见");
+            //停止某些任务
+            stopPlay();
+        }
     }
 }

@@ -67,13 +67,14 @@ public class MainActivity extends AppCompatActivity {
 
         transition.setAnimator(LayoutTransition.DISAPPEARING, objectAnimator);
         llContainer.setLayoutTransition(transition);
+
     }
 
     private String[] texts = new String[]{
-            "火来我在灰烬中等你",
-            "我对这个世界没什么可说的。我对这个世界没什么可说的。我对这个世界没什么可说的。",
-            "侠之大者，为国为民。",
-            "为往圣而继绝学"};
+            "1. 火来我在灰烬中等你",
+            "2. 我对这个世界没什么可说的。我对这个世界没什么可说的。我对这个世界没什么可说的。",
+            "3. 侠之大者，为国为民。",
+            "4. 为往圣而继绝学"};
 
 
     Pools.SimplePool<TextView> textViewPool = new Pools.SimplePool<>(texts.length);
