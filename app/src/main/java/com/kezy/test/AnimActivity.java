@@ -19,8 +19,6 @@ public class AnimActivity extends AppCompatActivity {
     TextView tv_btn, tv_bg;
     Button bbbbb, aaaaa;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
