@@ -19,8 +19,8 @@ public class MainActivity extends AppCompatActivity {
 
         btn = findViewById(R.id.btn_click);
         danMuView = findViewById(R.id.danmu_view);
-        danMuView.setMaxItem(2);
-        danMuView.setDelayTime(2500);
+        danMuView.setMaxItem(3);
+        danMuView.setDelayTime(3000);
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override

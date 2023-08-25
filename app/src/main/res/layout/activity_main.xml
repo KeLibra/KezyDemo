@@ -23,24 +23,40 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ProgressBar
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="30dp"
             android:id="@+id/host_action_download_progressbar"
             style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="72dp"
             android:layout_height="26dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="30dp"
             android:max="100"
             android:progress="10"
             android:progressDrawable="@drawable/host_bg_down_load_progress" />
 
+        <FrameLayout
+            android:id="@+id/iv_fl"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="200dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="40dp">
+
+            <ImageView
+                android:id="@+id/iv_vvvvv"
+                android:layout_width="360dp"
+                android:layout_height="140dp"
+                android:layout_gravity="center"
+                android:scaleType="fitXY"
+                android:src="@mipmap/test_image" />
+
+        </FrameLayout>
 
         <ImageView
+            android:layout_marginTop="30dp"
             android:id="@+id/iv_test"
-            android:layout_width="wrap_content"
-            android:layout_height="60dp"
+            android:layout_width="360dp"
+            android:layout_height="140dp"
             android:layout_gravity="center"
-            android:layout_marginTop="40dp"
-            android:scaleType="fitCenter"
+            android:scaleType="fitXY"
             android:src="@drawable/header1" />
 
         <RelativeLayout
@@ -71,12 +87,11 @@
             android:id="@+id/tv_bottom"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="底部"
-            android:paddingTop="20dp"
-            android:paddingBottom="20dp"
-            android:textSize="24sp"
             android:background="#fe2245"
             android:gravity="center"
-            />
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:text="底部"
+            android:textSize="24sp" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

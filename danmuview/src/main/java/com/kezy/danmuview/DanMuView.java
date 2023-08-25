@@ -33,6 +33,7 @@ import androidx.core.util.Pools;
  */
 public class DanMuView extends LinearLayout {
 
+    private View inView;
     private boolean isPlaying = false;
     private LayoutTransition transition;
 
@@ -52,6 +53,7 @@ public class DanMuView extends LinearLayout {
 
     public DanMuView(Context context) {
         super(context);
+        initView();
     }
 
     public DanMuView(Context context, @Nullable AttributeSet attrs) {
@@ -60,10 +62,16 @@ public class DanMuView extends LinearLayout {
         maxItem = typedArray.getInteger(R.styleable.MyDanmuView_maxItem, maxItem);
         typedArray.recycle();
         init();
+        initView();
     }
 
     public DanMuView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        initView();
+    }
+
+    private void initView() {
+
     }
 
     public boolean isPlaying() {
@@ -167,12 +175,16 @@ public class DanMuView extends LinearLayout {
      */
     private View getTextView() {
 
-        View inView = viewSimplePool.acquire();
+        inView = viewSimplePool.acquire();
         if (inView == null) {
             inView = LayoutInflater.from(getContext()).inflate(R.layout.item_live_danmu, null);
             TextView textView = inView.findViewById(R.id.causeTxt);
             textView.setText(texts[index]);
         }
+
+        inView.setPivotX(30);
+        inView.setPivotY(100);
+//        invalidate();
 
         return inView;
     }
@@ -202,13 +214,21 @@ public class DanMuView extends LinearLayout {
             switch (msg.what) {
                 case 0:
                     Log.w("-------msg", " ------ 更新一个view " + index + ", length = " + texts.length);
+                    if (index >= texts.length &&texts.length <= maxItem) {
+                        stopPlay();
+                        return;
+                    }
                     if (index >= texts.length) {
                         index = 0;
                     }
+
                     View textView = getTextView();
                     addView(textView);
                     sendEmptyMessageDelayed(0, delayTime);
                     index++;
+                    if (getChildCount() > maxItem + 1) {
+                        removeViewAt(0);
+                    }
                     break;
                 case 1:
                     Log.d("-------msg", " ------给展示的第一个view增加渐变透明动画 ");
@@ -254,28 +274,28 @@ public class DanMuView extends LinearLayout {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         Log.e("-------msg", " ------ onAttachedToWindow ----- ");
-        startPlay();
+//        startPlay();
 
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        stopPlay();
+//        stopPlay();
         Log.e("-------msg", " ------ onDetachedFromWindow -----");
     }
 
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);
-        if (visibility == View.VISIBLE){
-            Log.d("-------msg" ,"可见 ---- mIsAutoPlay = " + mIsAutoPlay);
+        if (visibility == View.VISIBLE) {
+            Log.d("-------msg", "可见 ---- mIsAutoPlay = " + mIsAutoPlay);
             //开始某些任务
-            startPlay();
-        } else if(visibility == INVISIBLE || visibility == GONE){
-            Log.d("-------msg" ,"不可见");
+//            startPlay();
+        } else if (visibility == INVISIBLE || visibility == GONE) {
+            Log.d("-------msg", "不可见");
             //停止某些任务
-            stopPlay();
+//            stopPlay();
         }
     }
 }

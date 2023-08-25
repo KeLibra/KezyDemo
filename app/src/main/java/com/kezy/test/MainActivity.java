@@ -1,16 +1,20 @@
 package com.kezy.test;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.StatFs;
+import android.provider.Settings;
 import android.text.TextUtils;
+import android.transition.TransitionManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -25,6 +29,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.kezy.test.broadcast.BootReceiver;
 import com.kezy.test.fastblur.Blur;
+import com.kezy.test.fastblur.BlurUtil;
+import com.kezy.test.fastblur.FastBlur;
+import com.kezy.test.fastblur.RSBlur;
+import com.kezy.test.fastblur.lightutils;
+import com.kezy.test.fastblur.test;
 import com.kezy.test.weight.AdBottomBannerView;
 import com.kezy.test.weight.AutoVagueBgImageView;
 
@@ -45,11 +54,15 @@ public class MainActivity extends AppCompatActivity {
 
     private AutoVagueBgImageView bgImageView;
 
-    Handler handler = new Handler(){
+    private FrameLayout frameLayout;
+
+    private Context context;
+
+    Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             // TODO Auto-generated method stub
-            switch (msg.what){
+            switch (msg.what) {
                 case 0:
                     bgImageView.setImageResource(R.mipmap.image_2);
                     break;
@@ -59,23 +72,23 @@ public class MainActivity extends AppCompatActivity {
                 default:
                     break;
             }
-            handler.sendEmptyMessageDelayed(((what++)%2),100);
+            handler.sendEmptyMessageDelayed(((what++) % 2), 100);
             super.handleMessage(msg);
         }
 
     };
 
     int what = 0;
-    Thread thread = new Thread(new Runnable(){
+    Thread thread = new Thread(new Runnable() {
 
         @Override
         public void run() {
             // TODO Auto-generated method stub
-            while (true){
+            while (true) {
 
-                try{
+                try {
                     Thread.sleep(100);
-                } catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -88,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        context = MainActivity.this;
+
         imageView = findViewById(R.id.iv_test);
 
 
@@ -95,13 +110,35 @@ public class MainActivity extends AppCompatActivity {
 //        bgImageView.setImageResource(R.drawable.header1);
 //        bgImageView.initVagueBg();
 
-        Bitmap bitmap1 = BitmapFactory.decodeResource(getResources(),R.mipmap.image);
-        Bitmap bitmap = Blur.fastBlur(MainActivity.this, bitmap1, 30, 15);
+        frameLayout = findViewById(R.id.iv_fl);
 
-        imageView.setImageResource(R.mipmap.image);
-        imageView.setBackgroundDrawable(new BitmapDrawable(bitmap));
+        frameLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    TransitionManager.beginDelayedTransition(frameLayout);
+                }
+                LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) frameLayout.getLayoutParams();
+                layoutParams.height = (int) dp2pxReturnFloat(context, 140);
+                layoutParams.width = (int) dp2pxReturnFloat(context, 360);
 
-        handler.sendEmptyMessageDelayed(((what++)%2),100);
+                frameLayout.setLayoutParams(layoutParams);
+            }
+        });
+
+
+        Bitmap bitmap1 = BitmapFactory.decodeResource(getResources(), R.mipmap.test_image);
+
+        long startTime = System.currentTimeMillis();
+        Bitmap fastBitmap = Blur.fastBlur(getApplicationContext(), bitmap1, 30, 0);
+//        Bitmap fastBitmap = BlurUtil.doBlur(bitmap1, 30, false);
+//        Bitmap fastBitmap = FastBlur.doBlur(bitmap1, 30, false);
+//        Bitmap endBitmap = test.handleImageNegative(fastBitmap);
+        Log.e("-------msg", " ------ use time = " + (System.currentTimeMillis() - startTime));
+        imageView.setImageBitmap(fastBitmap);
+
+
+        handler.sendEmptyMessageDelayed(((what++) % 2), 100);
 //        thread.start();
 //
 
@@ -153,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
         if (params == null) {
             params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         }
-        params.gravity = Gravity.CENTER_HORIZONTAL|Gravity.BOTTOM;
+        params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM;
         bottomBannerView.setLayoutParams(params);
 
         mRootView.addView(bottomBannerView);
@@ -161,16 +198,16 @@ public class MainActivity extends AppCompatActivity {
         tv_bottom = findViewById(R.id.tv_bottom);
 
 
-       tv_bottom.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View v) {
+        tv_bottom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 //               startActivity(new Intent(MainActivity.this, MainActivity3.class));
 //             boolean delete =  deleteApkFile(new File(path));
 //               Log.v("-------msg", " ---delete : = " + delete);
 
-               getSDCardAvailSize();
-           }
-       });
+                getSDCardAvailSize();
+            }
+        });
 
         List<Integer> blackCategoryIds = new ArrayList<>();
         blackCategoryIds.add(1);
@@ -185,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
     private long getSDCardAvailSize() {
         String state = Environment.getExternalStorageState();
-        long aaa=0;
+        long aaa = 0;
         if (Environment.MEDIA_MOUNTED.equals(state)) {
             File sdcardDir = Environment.getExternalStorageDirectory();
             StatFs sf = new StatFs(sdcardDir.getPath());
@@ -195,8 +232,8 @@ public class MainActivity extends AppCompatActivity {
             long totalSeize = blockSize * blockCount;
             aaa = availCount * blockSize;
             Log.e("-----msg -- size", "block大小:" + blockSize + ",block数目:" + blockCount + ",总大小:" + blockSize * blockCount);
-            Log.e("-----msg -- size", "totalSeize:" + totalSeize );
-            Log.e("-----msg -- size", "可用的block数目：:" + availCount + ",剩余空间:" + availCount * blockSize );
+            Log.e("-----msg -- size", "totalSeize:" + totalSeize);
+            Log.e("-----msg -- size", "可用的block数目：:" + availCount + ",剩余空间:" + availCount * blockSize);
 
             queryStorage();
         }
@@ -204,9 +241,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
-    public void queryStorage(){
+    public void queryStorage() {
         StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getPath());
 
         //存储块总数量
@@ -222,13 +257,13 @@ public class MainActivity extends AppCompatActivity {
         long totalSize = statFs.getTotalBytes();
         long availableSize = statFs.getAvailableBytes();
 
-        Log.d("statfs","total = " + getUnit(totalSize));
-        Log.d("statfs","availableSize = " + getUnit(availableSize));
+        Log.d("statfs", "total = " + getUnit(totalSize));
+        Log.d("statfs", "availableSize = " + getUnit(availableSize));
 
         //这里可以看出 available 是小于 free ,free 包括保留块。
-        Log.d("statfs","total = " + getUnit(blockSize * blockCount));
-        Log.d("statfs","available = " + getUnit(blockSize * availableCount));
-        Log.d("statfs","free = " + getUnit(blockSize * freeBlocks));
+        Log.d("statfs", "total = " + getUnit(blockSize * blockCount));
+        Log.d("statfs", "available = " + getUnit(blockSize * availableCount));
+        Log.d("statfs", "free = " + getUnit(blockSize * freeBlocks));
     }
 
     private String[] units = {"B", "KB", "MB", "GB", "TB"};
@@ -244,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return String.format(Locale.getDefault(), " %.2f %s", size, units[index]);
     }
+
     /**
      * 下载前清空本地缓存的文件
      */
@@ -261,8 +297,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             Log.v("-------msg", " return  ---delete : = ");
-           return destFileDir.delete();
-        }catch (Exception e) {
+            return destFileDir.delete();
+        } catch (Exception e) {
             e.printStackTrace();
             Log.v("-------msg", " exception   ---delete : = ");
         }
@@ -280,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String[] split = content.split("#");
-        Log.e("-------a", "split.length = " + (split.length/2));
+        Log.e("-------a", "split.length = " + (split.length / 2));
         if (split.length < 4) {
             return content;
         }
@@ -298,6 +334,7 @@ public class MainActivity extends AppCompatActivity {
 
         return spannableStringBuilder.toString();
     }
+
     BootReceiver updateInstallReceiver;
 
     @Override
@@ -321,4 +358,12 @@ public class MainActivity extends AppCompatActivity {
             this.unregisterReceiver(updateInstallReceiver);
         }
     }
+
+
+    public static float dp2pxReturnFloat(Context context, float dipValue) {
+        if (context == null) return dipValue * 1.5F;
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return dipValue * scale + 0.5F;
+    }
+
 }

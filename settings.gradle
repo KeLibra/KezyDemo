@@ -35,3 +35,4 @@ project(':notifylib').projectDir = (new File('SDKDownload/notifylib'))
 
 include ':danmu'
 include ':danmuview'
+include ':23test'
