@@ -20,8 +20,6 @@ public class AnimActivity extends AppCompatActivity {
     Button bbbbb, aaaaa;
 
 
-    
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
