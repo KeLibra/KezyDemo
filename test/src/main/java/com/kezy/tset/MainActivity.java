@@ -19,6 +19,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.kezy.tset.view.WaveProgressView;
+import com.kezy.tset.view.WaterWaveView;
+import com.kezy.tset.view.WaveView;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,9 +39,17 @@ public class MainActivity extends AppCompatActivity {
     private static String TAG = "-------msg";
     UseTimeDataManager mUseTimeDataManager;
 
-    private Button btn, btn2;
+    private Button btn, btn2, btn3;
     private TextView txt;
 
+    private WaterWaveView mWaterWaveView;
+    private float mPercent;
+
+    private Thread mThread;
+
+    private WaveView waveView;
+
+    private WaveProgressView myBezierProgressView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
         btn = findViewById(R.id.btn_click);
         btn2 = findViewById(R.id.btn_click2);
+        btn3 = findViewById(R.id.btn_click3);
         btn2.setVisibility(View.GONE);
         txt = findViewById(R.id.tv_msg);
 
@@ -106,6 +119,18 @@ public class MainActivity extends AppCompatActivity {
                     txt.setText(getJsonObjectStr());
                     Log.v("-------msg", " ----- get json = " + getTopActivityPackageName(MainActivity.this));
                 }
+            }
+        });
+
+        mWaterWaveView = (WaterWaveView) findViewById(R.id.wave_view);
+        waveView =  findViewById(R.id.wave_view_1);
+        myBezierProgressView = findViewById(R.id.wave_view_2);
+        btn3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mWaterWaveView.begainAnimation();
+                waveView.setProgress(80, 5000);
+                myBezierProgressView.startProgress();
             }
         });
     }
